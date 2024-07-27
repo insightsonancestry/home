@@ -12,7 +12,7 @@ export const Navbar = () => {
             <div className="absolute w-full top-2 bottom-0 bg-[linear-gradient(to_right,#0C60D0,#1816AB,#53BDE3,#171CAE,#70EDEF)] blur-md"></div>
             <Image src={logoImage} alt="Saas logo" className="h-12 w-12 relative" draggable="false" />
           </div>
-          <div className="border border-white border-opacity-30 h-10 w-10 inline-flex justify-center items-center rounded-lg sm:hidden">
+          <div className="border border-white border-opacity-30 h-10 w-10 inline-flex justify-center items-center rounded-lg hidden">
             <MenuIcon className="text-white" />
           </div>
           <nav className="items-center gap-6 hidden sm:flex">
