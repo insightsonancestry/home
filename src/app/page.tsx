@@ -7,6 +7,11 @@ import { ProductShowcase } from "@/components/ProductShowcase";
 import { FAQs } from "@/components/FAQs";
 import { Footer } from "@/components/Footer";
 
+export const metadata = {
+  title: "Insights on Ancestry",
+  description: "New genetics service",
+}
+
 export default function Home() {
   return (
     <>
