@@ -21,7 +21,7 @@ export const LogoTicker = () => {
       <div className="container">
         <h2 className="text-xl text-center text-white/70">Services that we offer</h2>
         <div className="overflow-hidden mt-9 before:content-[''] after:content[''] before:absolute after:absolute before:h-full after:h-full before:w-5 after:w-5 relative after:right-0 before:left-0 before:top-0 after:top-0 before:bg-[linear-gradient(to_right,#000,rgb(0,0,0,0))] after:bg-[linear-gradient(to_left,#000,rgb(0,0,0,0))]">
-          <div className="flex gap=16">
+          <div className="flex gap-16 justify-center items-center">
           {images.map(({src, alt}) => (
             <Image 
               src={src} 

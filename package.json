@@ -11,10 +11,11 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "framer-motion": "^11.3.19",
-    "next": "^14.2.4",
+    "next": "^14.2.5",
     "react": "^18",
     "react-dom": "^18",
-    "react-router-dom": "^6.25.1"
+    "react-router-dom": "^6.25.1",
+    "react-use-measure": "^2.1.1"
   },
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",
