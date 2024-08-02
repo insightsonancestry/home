@@ -1,5 +1,5 @@
 import Image from "next/image";
-import logoImage from '../assets/images/logosaas.png';
+import logoImage from '../assets/images/insightsonancestry-logo_test.png';
 import MenuIcon from '../assets/icons/menu.svg';
 import ShopButton from './ShopButton'; // or BuyButton, based on your naming
 
@@ -9,7 +9,7 @@ export const Navbar = () => {
       <div className="px-4">
         <div className="py-4 flex items-center justify-between">
           <div className="relative">
-            <div className="absolute w-full top-2 bottom-0 bg-[linear-gradient(to_right,#0C60D0,#1816AB,#53BDE3,#171CAE,#70EDEF)] blur-md"></div>
+            <div className="absolute w-full top-2 bottom-0 bg-[linear-gradient(to_right,rgb(12,96,208),rgb(24,22,171),rgb(83,189,227),rgb(23,28,174),rgb(112,237,239))] blur-md"></div>
             <Image src={logoImage} alt="Saas logo" className="h-12 w-12 relative" draggable="false" />
           </div>
           <div className="border border-white border-opacity-30 h-10 w-10 inline-flex justify-center items-center rounded-lg hidden">

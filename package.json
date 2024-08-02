@@ -1,9 +1,12 @@
 {
-  "name": "saas-website-dark-landing-page",
+  "homepage": "https://insightsonancestry.github.io/home",
+  "name": "insights on ancestry landing page",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d .next",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
