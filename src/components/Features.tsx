@@ -4,7 +4,7 @@ const features = [
 
   {
     title: 'Admixture Modelling - $33',
-    description: 'Admixture modeling using qpAdm which is the gold standard according to academics for precise ancestry composition analysis.',
+    description: 'Admixture modeling using qpAdm which is the gold standard according to academics for precise ancestry composition analysis. In instances where the customer’s ethnic group has been successfully modeled in academic research, the same model will be utilized. If such a model is not available, a rotating strategy will be employed to identify the most suitable model.',
   },
   {
     title: 'PCA Analysis - $20',
