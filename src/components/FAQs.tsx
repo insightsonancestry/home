@@ -6,8 +6,8 @@ import {AnimatePresence, motion} from "framer-motion";
 
 const items = [
   {
-    question: "What payment methods do you accept?",
-    answer: "We accept all cards accepted by PayPal.",
+    question: "What methodology is followed for admixture modelling?",
+    answer: "In instances where the customer’s ethnic group has been successfully modeled in academic research, the same model will be utilized. If such a model is not available, a rotating strategy will be employed to identify the most suitable model.",
   },
   {
     question: "How long will it take for my order to get processed and how will I receive it?",
@@ -18,8 +18,8 @@ const items = [
     answer: "We accept raw files from companies such as 23andMe, AncestryDNA, FTDNA (both old and new formats), MyHeritage, Mapmygenome, LivingDNA, and FamFinder by Gene By Gene.",
   },
   {
-    question: "Is my data secure?",
-    answer: "Customers' raw files and personal details are not shared with any other entity.",
+    question: "What if my admixture model doesn't pass with a p-value of 0.01 or 0.05? Do I get a refund?",
+    answer: "We do not guarantee a successful model for the fee charged for admixture modeling. The fee covers the preparation of the dataset and running the models. We will provide the best possible model for your ancestry profile even if a passing model is not found.",
   },
 ];
 
