@@ -11,7 +11,7 @@ const items = [
   },
   {
     question: "How long will it take for my order to get processed and how will I receive it?",
-    answer: "Under normal circumstances, the maximum timeframe is 5 days. We strive to deliver the results as soon as possible via email.",
+    answer: "Under normal circumstances, the maximum timeframe is 7 business days. We strive to deliver the results as soon as possible via email.",
   },
   {
     question: "Which raw file format should I upload?",
