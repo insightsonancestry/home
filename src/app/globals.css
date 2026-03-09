@@ -2,6 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme Variables ── */
+:root {
+  --bg: #0a0a0a;
+  --panel: #0f0f0f;
+  --panel-strong: #141414;
+  --border: rgba(83, 189, 227, 0.12);
+  --border-strong: rgba(83, 189, 227, 0.25);
+  --accent: rgb(83, 189, 227);
+  --accent2: rgb(112, 237, 239);
+  --text-bright: #ffffff;
+  --text-primary: rgba(255, 255, 255, 0.85);
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --text-faint: rgba(255, 255, 255, 0.3);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --accent-shadow: 0 0 40px rgba(83, 189, 227, 0.06);
+}
+
 html {
-    scroll-behavior: smooth;
-  }
+  scroll-behavior: smooth;
+}
+
+/* ── Animations ── */
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%      { transform: translateY(-10px); }
+}
+
+@keyframes border-dance {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.7; }
+}
+
+/* Utility classes */
+.animate-gradient {
+  background-size: 300% 300%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-border-dance {
+  background-size: 200% 100%;
+  animation: border-dance 3s linear infinite;
+}
+
+.animate-subtle-pulse {
+  animation: subtle-pulse 4s ease-in-out infinite;
+}
+
+/* ── Panel / Card ── */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.panel-strong {
+  background: var(--panel-strong);
+  border: 2px solid var(--border-strong);
+  box-shadow: var(--accent-shadow);
+}
+
+.panel:hover {
+  border-color: var(--border-strong);
+}
+
+/* ── Accent link underline ── */
+.accent-link {
+  position: relative;
+  transition: color 0.2s;
+}
+.accent-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+.accent-link:hover::after {
+  width: 100%;
+}
+
+/* ── Grid background ── */
+.grid-bg {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+}

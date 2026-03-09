@@ -8,39 +8,93 @@ import BuyButton from './BuyButton';
 
 export const Hero = () => {
   return (
-    <div className="bg-black text-white bg-[linear-gradient(to_bottom,#000000_20%,#062d55_34%,#0d5299_65%,#2385e8_82%)] py-[72px] sm:py-24 relative overflow-clip">
-      <div className="absolute h-[375px] w-[750px] sm:w-[1536px] sm:h-[768px] lg:w-[2400px] lg:h-[1200px] rounded-[100%] bg-black left-1/2 -translate-x-1/2 border border-[#4d99d6] bg-[radial-gradient(closest-side,#000_82%,#2a45bb)] top-[calc(100%-96px)] sm:top-[calc(100%-120px)]"></div>
-      <div className="container relative">
-        <div className="flex items-center justify-center">
-          <a href="#features" className="inline-flex flex-col sm:flex-row gap-3 border py-1 px-2 rounded-lg border-white/30">
-            <span className="bg-[linear-gradient(to_right,rgb(83,189,227),rgb(112,237,239))] text-transparent bg-clip-text [-webkit-background-clip:text] text-center sm:text-left">Affordable ancestry modelling is here</span>
+    <div className="relative overflow-clip">
+
+      {/* Subtle grid background */}
+      {/* Subtle accent glow */}
+      <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(83,189,227,0.06),transparent_70%)]" />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 py-16 sm:py-24">
+        {/* Tag line pill */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="flex items-center justify-center"
+        >
+          <a href="#features" className="inline-flex flex-col sm:flex-row gap-3 border px-3 py-1.5 text-[10px] uppercase tracking-wider group transition-colors"
+            style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+            <span style={{ color: 'var(--accent)' }}>Affordable ancestry modelling is here</span>
             <span className="inline-flex items-center gap-1 justify-center sm:justify-start">
               <span>Read more</span>
-              <ArrowIcon />
+              <ArrowIcon className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
             </span>
           </a>
-        </div>
-        <div className="flex justify-center mt-8">
+        </motion.div>
+
+        {/* Main heading */}
+        <div className="flex justify-center mt-10">
           <div className="inline-flex relative">
-            <h1 className="text-7xl sm:text-9xl font-bold tracking-tighter text-center inline-flex">Decode your<br />ancestry</h1>
-            <motion.div className="absolute right-[600px] top-[150px] hidden sm:inline"
-            drag
-            dragSnapToOrigin
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="text-5xl sm:text-7xl md:text-8xl font-bold tracking-tighter text-center uppercase leading-none"
+              style={{ color: 'var(--text-bright)' }}
             >
-            <Image src={cursorImage} height="200" width="200" alt="" className="max-w-none" draggable="false" /></motion.div>
-            <motion.div className="absolute top-[50px] left-[550px] hidden sm:inline"
-            drag
-            dragSnapToOrigin>
-            <Image src={dnaImage} alt="" height="400" width="300" className="max-w-none" draggable="false" /></motion.div>
+              Decode your<br /><span style={{ color: 'var(--text-faint)' }}>ancestry</span>
+            </motion.h1>
+            {/* Cursor image - left side */}
+            <motion.div
+              className="absolute right-[98%] top-[60%] -translate-y-1/2 hidden lg:block"
+              drag dragSnapToOrigin
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.9 }}
+            >
+              <div className="animate-float">
+                <Image src={cursorImage} alt="" height="180" width="180" className="max-w-none opacity-70 w-[80px] h-[80px] sm:w-[120px] sm:h-[120px] lg:w-[180px] lg:h-[180px]" draggable="false" />
+              </div>
+            </motion.div>
+            {/* DNA image - right side */}
+            <motion.div
+              className="absolute left-[98%] top-[10%] hidden lg:block"
+              drag dragSnapToOrigin
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 1.1 }}
+            >
+              <div className="animate-float" style={{ animationDelay: '2s' }}>
+                <Image src={dnaImage} alt="" height="350" width="260" className="max-w-none opacity-70 w-[100px] h-auto sm:w-[160px] lg:w-[260px]" draggable="false" />
+              </div>
+            </motion.div>
           </div>
         </div>
-        <div className="flex justify-center">
-          <p className="text-center text-xl mt-8 max-w-md">Unlock the secrets of your ancestry with our affordable DNA analysis services. We specialize in connecting your DNA to ancient populations, offering you a unique insight into your genetic heritage.</p>
-        </div>
-        <div className="flex justify-center mt-8">
+
+        {/* Subtitle */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="flex justify-center"
+        >
+          <p className="text-center text-[15px] mt-8 max-w-md leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+            Unlock the secrets of your ancestry with our affordable DNA analysis services. We specialize in connecting your DNA to ancient populations, offering you a unique insight into your genetic heritage.
+          </p>
+        </motion.div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.9 }}
+          className="flex justify-center mt-8"
+        >
           <BuyButton />
-        </div>
+        </motion.div>
       </div>
+
+{/* spacer */}
     </div>
   );
 };

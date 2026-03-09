@@ -1,14 +1,25 @@
+"use client";
+import { motion } from "framer-motion";
+
 export const Banner = () => {
-  return ( 
-    <div className="py-3 text-center bg-[linear-gradient(to_right,rgb(12,96,208),rgb(24,22,171),rgb(83,189,227),rgb(23,28,174),rgb(112,237,239))]">
-      <div className="container">
-        <div className="font-medium text-black flex justify-center">
-          <span className="hidden sm:inline">Introducing a completely new service - </span>
-          <span className="underline underline-offset-4 font-medium">
-            Insights on Ancestry
+  return (
+    <motion.div
+      initial={{ y: -40, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="py-2.5 text-center border-b"
+      style={{ background: 'var(--panel)', borderColor: 'var(--border)' }}
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex justify-center items-center gap-2 text-[10px] uppercase tracking-[2px]" style={{ color: 'var(--text-muted)' }}>
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: 'var(--accent)' }} />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: 'var(--accent)' }} />
           </span>
+          <span className="hidden sm:inline">Introducing a completely new service —</span>
+          <span style={{ color: 'var(--accent)' }} className="font-bold">Insights on Ancestry</span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

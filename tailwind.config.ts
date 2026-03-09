@@ -6,7 +6,7 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  darkMode: 'class',  // Enable dark mode using the 'class' strategy
+  darkMode: 'class',
   theme: {
     extend: {
       container: {
@@ -27,6 +27,16 @@ const config: Config = {
           800: '#5b21b6',
           900: '#4c1d95',
         },
+      },
+      animation: {
+        'gradient': 'gradient-shift 8s ease infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'float-delayed': 'float 6s ease-in-out 2s infinite',
+        'float-slow': 'float 8s ease-in-out infinite',
+        'pulse-glow': 'pulse-glow 4s ease-in-out infinite',
+        'text-glow': 'text-glow 3s ease-in-out infinite',
+        'border-dance': 'border-dance 3s linear infinite',
+        'star-twinkle': 'star-twinkle 2s ease-in-out infinite',
       },
     },
   },
