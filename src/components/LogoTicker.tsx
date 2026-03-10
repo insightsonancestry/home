@@ -1,6 +1,6 @@
 "use client";
 import Image from 'next/image';
-import admixturemodeling from '../assets/images/admixture_modeling.png';
+import admixturemodeling from '../assets/images/admixture_modelling.png';
 import PCA from '../assets/images/pca.png';
 import YDNA from '../assets/images/ydna.png';
 import customdataset from '../assets/images/customdataset.png';
