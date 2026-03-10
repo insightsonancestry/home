@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 const items = [
   {
-    question: "What methodology is followed for admixture modelling?",
+    question: "What methodology is followed for admixture modeling?",
     answer: "In instances where the customer's ethnic group has been successfully modeled in academic research, the same model will be utilized. If such a model is not available, a rotating strategy will be employed to identify the most suitable model.",
   },
   {

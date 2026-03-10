@@ -24,7 +24,7 @@ export const Hero = () => {
         >
           <a href="#features" className="inline-flex flex-col sm:flex-row gap-3 border px-3 py-1.5 text-[10px] uppercase tracking-wider group transition-colors"
             style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-            <span style={{ color: 'var(--accent)' }}>Affordable ancestry modelling is here</span>
+            <span style={{ color: 'var(--accent)' }}>Affordable ancestry modeling is here</span>
             <span className="inline-flex items-center gap-1 justify-center sm:justify-start">
               <span>Read more</span>
               <ArrowIcon className="w-3 h-3 group-hover:translate-x-1 transition-transform" />

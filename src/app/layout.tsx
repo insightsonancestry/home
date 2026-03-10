@@ -7,7 +7,7 @@ const dmSans = DM_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Insights on Ancestry",
-  description: "Affordable ancestry modelling services",
+  description: "Affordable ancestry modeling services",
 };
 
 export default function RootLayout({

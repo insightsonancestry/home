@@ -1,6 +1,6 @@
 "use client";
 import Image from 'next/image';
-import admixturemodelling from '../assets/images/admixture_modelling.png';
+import admixturemodeling from '../assets/images/admixture_modeling.png';
 import PCA from '../assets/images/pca.png';
 import YDNA from '../assets/images/ydna.png';
 import customdataset from '../assets/images/customdataset.png';
@@ -8,7 +8,7 @@ import rawfileconversion from '../assets/images/rawfile.png';
 import { motion } from "framer-motion";
 
 const images = [
-  { src: admixturemodelling, alt: 'admixture modelling' },
+  { src: admixturemodeling, alt: 'admixture modeling' },
   { src: PCA, alt: 'Principal Component Analysis' },
   { src: YDNA, alt: 'Y-chromosome haplogroup' },
   { src: customdataset, alt: 'curating custom dataset' },

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 const features = [
   {
-    title: 'Admixture Modelling',
+    title: 'Admixture modeling',
     description: 'Admixture modeling using qpAdm which is the gold standard according to academics for precise ancestry composition analysis.',
   },
   {
