@@ -8,23 +8,29 @@ import { useState, useEffect, useRef } from "react";
 const HamburgerIcon = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) => (
   <button
     onClick={toggle}
-    className="sm:hidden relative w-8 h-8 flex flex-col items-center justify-center gap-[5px] z-50 border border-[var(--border)] p-1"
+    className="sm:hidden relative w-8 h-8 z-50 border border-[var(--border)]"
     aria-label="Toggle menu"
   >
+    {/* Top line → rotates to form one half of the X */}
     <motion.span
-      animate={isOpen ? { rotate: 45, y: 6.5 } : { rotate: 0, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="block w-4 h-[1.5px] bg-[var(--accent)]"
+      className="absolute left-1/2 top-1/2 w-4 h-[1.5px] bg-[var(--accent)]"
+      style={{ x: "-50%" }}
+      animate={isOpen ? { y: "-50%", rotate: 45 } : { y: "calc(-50% - 5px)", rotate: 0 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
     />
+    {/* Middle line → fades out */}
     <motion.span
+      className="absolute left-1/2 top-1/2 w-4 h-[1.5px] bg-[var(--accent)]"
+      style={{ x: "-50%", y: "-50%" }}
       animate={isOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
-      transition={{ duration: 0.2 }}
-      className="block w-4 h-[1.5px] bg-[var(--accent)]"
+      transition={{ duration: 0.15 }}
     />
+    {/* Bottom line → rotates to form other half of the X */}
     <motion.span
-      animate={isOpen ? { rotate: -45, y: -6.5 } : { rotate: 0, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="block w-4 h-[1.5px] bg-[var(--accent)]"
+      className="absolute left-1/2 top-1/2 w-4 h-[1.5px] bg-[var(--accent)]"
+      style={{ x: "-50%" }}
+      animate={isOpen ? { y: "-50%", rotate: -45 } : { y: "calc(-50% + 5px)", rotate: 0 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
     />
   </button>
 );
