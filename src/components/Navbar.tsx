@@ -12,7 +12,7 @@ const HamburgerIcon = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void
     aria-label="Toggle menu"
   >
     <motion.span
-      animate={isOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
+      animate={isOpen ? { rotate: 45, y: 6.5 } : { rotate: 0, y: 0 }}
       transition={{ duration: 0.3 }}
       className="block w-4 h-[1.5px] bg-[var(--accent)]"
     />
@@ -22,7 +22,7 @@ const HamburgerIcon = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void
       className="block w-4 h-[1.5px] bg-[var(--accent)]"
     />
     <motion.span
-      animate={isOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }}
+      animate={isOpen ? { rotate: -45, y: -6.5 } : { rotate: 0, y: 0 }}
       transition={{ duration: 0.3 }}
       className="block w-4 h-[1.5px] bg-[var(--accent)]"
     />
@@ -68,7 +68,7 @@ export const Navbar = () => {
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <div className="sticky top-0 z-50">
+    <div className="sticky top-0 z-50 relative">
       <div className="px-3 sm:px-6 pt-3">
         <motion.header
           initial={{ opacity: 0 }}
@@ -110,7 +110,7 @@ export const Navbar = () => {
         </motion.header>
       </div>
 
-      {/* Mobile menu — outside the bordered header so it's never clipped */}
+      {/* Mobile menu — absolutely positioned so it overlays content without scrolling */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -118,7 +118,7 @@ export const Navbar = () => {
             initial="closed"
             animate="open"
             exit="closed"
-            className="sm:hidden overflow-hidden mx-3 border-x-2 border-b-2 backdrop-blur-md"
+            className="sm:hidden overflow-hidden mx-3 border-x-2 border-b-2 backdrop-blur-md absolute left-0 right-0"
             style={{
               borderColor: 'var(--border-strong)',
               background: 'rgba(10,10,10,0.95)',
