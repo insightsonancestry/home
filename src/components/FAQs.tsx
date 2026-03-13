@@ -63,28 +63,31 @@ export const FAQs = () => {
     <section id="faqs">
       <div className="relative py-16 sm:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8 lg:gap-16">
-            <div>
-              <span className="text-[10px] uppercase tracking-[2px]" style={{ color: 'var(--text-muted)' }}>
-                <span style={{ color: 'var(--accent)' }}>⧬</span> FAQ
-              </span>
-              <motion.h2
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="text-3xl sm:text-4xl font-bold tracking-tighter mt-3 uppercase"
-                style={{ color: 'var(--text-bright)' }}
-              >
-                Frequently asked questions
-              </motion.h2>
-            </div>
-            <div>
-              {items.map(({ question, answer }) => (
-                <AccordionItem question={question} answer={answer} key={question} />
-              ))}
-            </div>
+
+          {/* Centered header */}
+          <div className="text-center mb-10">
+            <span className="text-[10px] uppercase tracking-[2px]" style={{ color: 'var(--text-muted)' }}>
+              <span style={{ color: 'var(--accent)' }}>⧬</span> FAQ
+            </span>
+            <motion.h2
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-3xl sm:text-4xl font-bold tracking-tighter mt-3 uppercase"
+              style={{ color: 'var(--text-bright)' }}
+            >
+              Frequently asked questions
+            </motion.h2>
           </div>
+
+          {/* Accordion — full width */}
+          <div className="max-w-3xl mx-auto">
+            {items.map(({ question, answer }) => (
+              <AccordionItem question={question} answer={answer} key={question} />
+            ))}
+          </div>
+
         </div>
       </div>
     </section>

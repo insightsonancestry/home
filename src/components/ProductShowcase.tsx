@@ -17,7 +17,7 @@ export const ProductShowcase = () => {
   return (
     <div className="relative py-16 sm:py-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-        <div className="mb-10">
+        <div className="mb-10 text-center">
           <span className="text-[10px] uppercase tracking-[2px]" style={{ color: 'var(--text-muted)' }}>
             <span style={{ color: 'var(--accent)' }}>⧬</span> Showcase
           </span>
@@ -36,7 +36,7 @@ export const ProductShowcase = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-sm mt-3 max-w-lg leading-relaxed"
+            className="text-sm mt-3 max-w-lg mx-auto leading-relaxed"
             style={{ color: 'var(--text-muted)' }}
           >
             Our analytical tools for raw files are complex, so we use infographics to present the results in a more accessible manner for our customers.

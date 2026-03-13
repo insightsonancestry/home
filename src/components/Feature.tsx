@@ -37,12 +37,16 @@ export const Feature = ({ title, description }: { title: string, description: st
         ref={border}
       />
       <div className="relative z-10">
-        <div className="inline-flex h-12 w-12 justify-center items-center border"
-          style={{ borderColor: 'var(--border-strong)', color: 'var(--accent)', background: 'var(--panel-strong)' }}>
-          <ServicesIcon className="h-6 w-6" style={{ fill: 'var(--accent)' }} />
+        {/* Icon + Title row */}
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0 inline-flex h-12 w-12 justify-center items-center border"
+            style={{ borderColor: 'var(--border-strong)', color: 'var(--accent)', background: 'var(--panel-strong)' }}>
+            <ServicesIcon className="h-6 w-6" style={{ fill: 'var(--accent)' }} />
+          </div>
+          <h3 className="font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-bright)' }}>{title}</h3>
         </div>
-        <h3 className="mt-5 font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-bright)' }}>{title}</h3>
-        <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{description}</p>
+        {/* Description below */}
+        <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{description}</p>
       </div>
     </div>
   );
