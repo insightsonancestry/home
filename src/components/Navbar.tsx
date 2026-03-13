@@ -90,7 +90,7 @@ export const Navbar = () => {
           }}
         >
           <div className={`px-4 sm:px-6 flex items-center justify-between transition-all duration-500 ${scrolled ? 'h-11' : 'h-14'}`}>
-            <div className="flex items-center gap-3">
+            <a href="#" className="flex items-center gap-3" aria-label="Back to top">
               <Image
                 src={logoImage}
                 alt="Logo"
@@ -100,7 +100,7 @@ export const Navbar = () => {
               <span className="text-[11px] sm:text-[13px] tracking-[4px] uppercase font-bold leading-none" style={{ color: 'var(--text-bright)' }}>
                 IOA
               </span>
-            </div>
+            </a>
 
             {/* Desktop nav */}
             <nav className="hidden sm:flex items-center gap-5">
