@@ -80,11 +80,12 @@ export const Features = () => {
             ))}
           </div>
 
-          {/* Large screens — static 3-col grid */}
+          {/* Large screens — static 3-col grid, equal height cards */}
           <div className="hidden lg:grid grid-cols-3 gap-4">
             {features.map(({ title, description }, i) => (
               <motion.div
                 key={title}
+                className="h-[240px]"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
