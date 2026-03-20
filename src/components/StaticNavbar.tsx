@@ -54,7 +54,7 @@ export const StaticNavbar = () => {
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <div className="sticky top-0 z-50">
+    <div className="fixed top-0 left-0 right-0 z-50">
       <motion.header
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -74,10 +74,10 @@ export const StaticNavbar = () => {
               draggable="false"
             />
             <span
-              className="text-[11px] sm:text-[13px] tracking-[4px] uppercase font-bold leading-none"
+              className="text-[10px] sm:text-[12px] tracking-[3px] uppercase font-bold leading-none"
               style={{ color: "var(--text-bright)" }}
             >
-              IOA
+              InsightsOnAncestry
             </span>
           </a>
 

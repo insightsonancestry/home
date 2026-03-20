@@ -82,7 +82,7 @@ export const Navbar = () => {
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <div className="sticky top-0 z-50">
+    <div>
       <motion.header
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -101,8 +101,8 @@ export const Navbar = () => {
                 className="h-8 w-8"
                 draggable="false"
               />
-              <span className="text-[11px] sm:text-[13px] tracking-[4px] uppercase font-bold leading-none" style={{ color: 'var(--text-bright)' }}>
-                IOA
+              <span className="text-[10px] sm:text-[12px] tracking-[3px] uppercase font-bold leading-none" style={{ color: 'var(--text-bright)' }}>
+                InsightsOnAncestry
               </span>
             </a>
 

@@ -19,7 +19,7 @@ export const LogoTicker = () => {
   return (
     <div className="relative py-12 sm:py-16">
       <div className="w-full px-4 sm:px-6 lg:px-10">
-        <h2 className="text-[10px] text-center uppercase tracking-[3px] mb-8" style={{ color: 'var(--text-faint)' }}>Services that we offer</h2>
+        <h2 className="text-[10px] text-center uppercase tracking-[3px] mb-8 transition-colors duration-300 hover:text-[var(--accent)] cursor-default" style={{ color: 'var(--text-faint)' }}>Services that we offer</h2>
         <div className="flex overflow-hidden before:content-[''] before:z-10 after:content-[''] before:absolute after:absolute before:h-full after:h-full before:w-10 after:w-10 sm:before:w-20 sm:after:w-20 relative after:right-0 before:left-0 before:top-0 after:top-0 before:bg-[linear-gradient(to_right,#0a0a0a,transparent)] after:bg-[linear-gradient(to_left,#0a0a0a,transparent)]">
           <motion.div
             transition={{ duration: 10, ease: "linear", repeat: Infinity }}

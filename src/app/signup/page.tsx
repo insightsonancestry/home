@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StaticNavbar } from "@/components/StaticNavbar";
+import { useMouseGlow } from "@/hooks/useMouseGlow";
 import { Footer } from "@/components/Footer";
 
 const COUNTRIES = [
@@ -75,6 +76,27 @@ function OtpInput({ value, onChange }: { value: string[]; onChange: (v: string[]
   );
 }
 
+function AuthCard({ children }: { children: React.ReactNode }) {
+  const { ref, maskImage } = useMouseGlow(200);
+
+  return (
+    <div className="relative group">
+      <div
+        className="absolute top-0 left-0 right-0 h-[1px] z-10 opacity-60 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ background: "linear-gradient(90deg, transparent, var(--accent), var(--accent2), var(--accent), transparent)" }}
+      />
+      <motion.div
+        ref={ref}
+        className="absolute inset-0 border-2 rounded-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+        style={{ borderColor: "var(--accent)", WebkitMaskImage: maskImage, maskImage }}
+      />
+      <div className="panel-strong rounded-sm p-6 sm:p-10 transition-all duration-300" style={{ boxShadow: "var(--accent-glow)" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function SignupPage() {
   const [step, setStep] = useState<"form" | "verify" | "login">("form");
   const [form, setForm] = useState({
@@ -90,17 +112,12 @@ export default function SignupPage() {
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
-  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setLoginForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.info("Login submitted — backend integration coming soon.");
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setLoginForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -118,12 +135,13 @@ export default function SignupPage() {
   return (
     <>
       <StaticNavbar />
+      <div className="h-14" />
 
-      <main className="min-h-[80vh] flex items-center justify-center px-4 py-10 sm:py-20">
+      <main className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center px-4 py-6 sm:py-20">
         <div className="w-full max-w-6xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Left side - Form */}
-            <div className="w-full max-w-lg mx-auto lg:mx-0" style={{ minHeight: "600px" }}>
+            <div className="w-full max-w-lg mx-auto lg:mx-0">
               <AnimatePresence mode="wait">
 
             {/* STEP 1: Sign-up form */}
@@ -135,10 +153,10 @@ export default function SignupPage() {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="panel-strong rounded-sm p-6 sm:p-10"
               >
+                <AuthCard>
                 <div className="mb-8 text-center">
-                  <div className="inline-flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-full border-2" style={{ borderColor: "var(--accent)", background: "rgba(83,189,227,0.1)" }}>
+                  <div className="inline-flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-full border-2" style={{ borderColor: "var(--accent)", background: "var(--accent-faint)" }}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6" style={{ color: "var(--accent)" }}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM3 20a6 6 0 0 1 12 0v1H3v-1z" />
                     </svg>
@@ -261,9 +279,9 @@ export default function SignupPage() {
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     type="submit"
                     className="mt-2 relative flex items-center justify-center gap-2 px-6 py-3 font-bold text-xs uppercase tracking-[2px] border transition-all duration-300 cursor-pointer group"
-                    style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "rgba(83,189,227,0.07)" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(83,189,227,0.15)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(83,189,227,0.07)"; }}
+                    style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "var(--accent-subtle)" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-hover)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-subtle)"; }}
                   >
                     Create Account
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 group-hover:translate-x-1 transition-transform">
@@ -278,6 +296,7 @@ export default function SignupPage() {
                     <span style={{ color: "var(--accent)" }} className="cursor-pointer accent-link">Privacy Policy</span>.
                   </p>
                 </form>
+                </AuthCard>
               </motion.div>
             )}
 
@@ -290,12 +309,12 @@ export default function SignupPage() {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="panel-strong rounded-sm p-6 sm:p-10"
               >
+                <AuthCard>
                 <div className="flex justify-center mb-6">
                   <div
                     className="w-14 h-14 rounded-full flex items-center justify-center"
-                    style={{ background: "rgba(83,189,227,0.1)", border: "2px solid var(--accent)" }}
+                    style={{ background: "var(--accent-faint)", border: "2px solid var(--accent)" }}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7" style={{ color: "var(--accent)" }}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
@@ -321,9 +340,9 @@ export default function SignupPage() {
                     type="submit"
                     disabled={otp.join("").length < 6}
                     className="relative flex items-center justify-center gap-2 px-6 py-3 font-bold text-xs uppercase tracking-[2px] border transition-all duration-300 cursor-pointer group disabled:opacity-40 disabled:cursor-not-allowed"
-                    style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "rgba(83,189,227,0.07)" }}
-                    onMouseEnter={(e) => { if (otp.join("").length === 6) (e.currentTarget as HTMLButtonElement).style.background = "rgba(83,189,227,0.15)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(83,189,227,0.07)"; }}
+                    style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "var(--accent-subtle)" }}
+                    onMouseEnter={(e) => { if (otp.join("").length === 6) (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-hover)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-subtle)"; }}
                   >
                     Confirm
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 group-hover:translate-x-1 transition-transform">
@@ -344,6 +363,7 @@ export default function SignupPage() {
                     </button>
                   </p>
                 </form>
+                </AuthCard>
               </motion.div>
             )}
 
@@ -356,10 +376,10 @@ export default function SignupPage() {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="panel-strong rounded-sm p-6 sm:p-10"
               >
+                <AuthCard>
                 <div className="mb-8 text-center">
-                  <div className="inline-flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-full border-2" style={{ borderColor: "var(--accent)", background: "rgba(83,189,227,0.1)" }}>
+                  <div className="inline-flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-full border-2" style={{ borderColor: "var(--accent)", background: "var(--accent-faint)" }}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6" style={{ color: "var(--accent)" }}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                     </svg>
@@ -380,7 +400,7 @@ export default function SignupPage() {
                   </p>
                 </div>
 
-                <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3 sm:gap-4">
+                <form onSubmit={(e) => { e.preventDefault(); console.info("Login submitted — backend integration coming soon."); }} className="flex flex-col gap-3 sm:gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] uppercase tracking-[2px]" style={{ color: "var(--text-muted)" }}>
                       Email Address <span style={{ color: "var(--accent)" }}>*</span>
@@ -440,9 +460,9 @@ export default function SignupPage() {
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     type="submit"
                     className="mt-2 relative flex items-center justify-center gap-2 px-6 py-3 font-bold text-xs uppercase tracking-[2px] border transition-all duration-300 cursor-pointer group"
-                    style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "rgba(83,189,227,0.07)" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(83,189,227,0.15)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(83,189,227,0.07)"; }}
+                    style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "var(--accent-subtle)" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-hover)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-subtle)"; }}
                   >
                     Log In
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 group-hover:translate-x-1 transition-transform">
@@ -450,6 +470,7 @@ export default function SignupPage() {
                     </svg>
                   </motion.button>
                 </form>
+                </AuthCard>
               </motion.div>
             )}
 
@@ -461,19 +482,19 @@ export default function SignupPage() {
               <div className="relative">
                 {/* Decorative DNA helix */}
                 <div className="absolute -left-8 top-0 w-px h-full" style={{ background: 'linear-gradient(to bottom, transparent, var(--accent), transparent)' }} />
-                
+
                 <h2 className="text-3xl font-bold tracking-tighter uppercase mb-6" style={{ color: 'var(--text-bright)' }}>
                   Unlock your<br /><span style={{ color: 'var(--accent)' }}>genetic history</span>
                 </h2>
-                
+
                 <p className="text-sm mb-8 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                  Join thousands who have discovered their ancestry through our advanced DNA modeling services. 
+                  Join thousands who have discovered their ancestry through our advanced DNA modeling services.
                   Understand your origins like never before.
                 </p>
 
                 <div className="space-y-6">
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center" style={{ background: 'rgba(83,189,227,0.1)', border: '1px solid rgba(83,189,227,0.3)' }}>
+                    <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center" style={{ background: 'var(--accent-faint)', border: '1px solid var(--border-strong)' }}>
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5" style={{ color: 'var(--accent)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
                       </svg>
@@ -485,7 +506,7 @@ export default function SignupPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center" style={{ background: 'rgba(83,189,227,0.1)', border: '1px solid rgba(83,189,227,0.3)' }}>
+                    <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center" style={{ background: 'var(--accent-faint)', border: '1px solid var(--border-strong)' }}>
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5" style={{ color: 'var(--accent)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25Z" />
                       </svg>
@@ -497,7 +518,7 @@ export default function SignupPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center" style={{ background: 'rgba(83,189,227,0.1)', border: '1px solid rgba(83,189,227,0.3)' }}>
+                    <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center" style={{ background: 'var(--accent-faint)', border: '1px solid var(--border-strong)' }}>
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5" style={{ color: 'var(--accent)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
                       </svg>

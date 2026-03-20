@@ -1,4 +1,3 @@
-import { Banner } from "@/components/Banner";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
@@ -15,8 +14,11 @@ export const metadata = {
 export default function Home() {
   return (
     <>
-      <Banner />
-      <Navbar />
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navbar />
+      </div>
+      {/* Spacer to offset fixed header height (navbar 56px) */}
+      <div className="h-14" />
       <Hero />
       <LogoTicker />
       <Features />

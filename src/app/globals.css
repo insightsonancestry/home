@@ -7,16 +7,31 @@
   --bg: #0a0a0a;
   --panel: #0f0f0f;
   --panel-strong: #141414;
-  --border: rgba(83, 189, 227, 0.12);
-  --border-strong: rgba(83, 189, 227, 0.25);
-  --accent: rgb(83, 189, 227);
+
+  --accent-rgb: 83, 189, 227;
+  --accent: rgb(var(--accent-rgb));
   --accent2: rgb(112, 237, 239);
+  --accent-hover: rgba(var(--accent-rgb), 0.15);
+  --accent-subtle: rgba(var(--accent-rgb), 0.08);
+  --accent-faint: rgba(var(--accent-rgb), 0.05);
+
+  --border: rgba(var(--accent-rgb), 0.12);
+  --border-strong: rgba(var(--accent-rgb), 0.25);
+
+  --error-rgb: 239, 68, 68;
+  --error: rgb(var(--error-rgb));
+  --error-subtle: rgba(var(--error-rgb), 0.05);
+  --error-border: rgba(var(--error-rgb), 0.25);
+  --error-text: rgba(var(--error-rgb), 0.85);
+
   --text-bright: #ffffff;
   --text-primary: rgba(255, 255, 255, 0.85);
   --text-muted: rgba(255, 255, 255, 0.5);
   --text-faint: rgba(255, 255, 255, 0.3);
+
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  --accent-shadow: 0 0 40px rgba(83, 189, 227, 0.06);
+  --accent-shadow: 0 0 40px rgba(var(--accent-rgb), 0.06);
+  --accent-glow: 0 0 30px rgba(var(--accent-rgb), 0.06);
 }
 
 html {

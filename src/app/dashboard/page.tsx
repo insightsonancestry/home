@@ -4,18 +4,18 @@ import Image from "next/image";
 import logoImage from "@/assets/images/insightsonancestry-logo_test.png";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { GlowCard } from "@/components/GlowCard";
 
-// ── Icons ────────────────────────────────────────────────────────────────────
 
 const IconDIY = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4 shrink-0">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21a48.25 48.25 0 0 1-8.135-.687c-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085" />
   </svg>
 );
 
 const IconAssisted = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4 shrink-0">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
   </svg>
 );
 
@@ -56,16 +56,521 @@ const IconLogout = () => (
   </svg>
 );
 
-// ── Sidebar nav items ────────────────────────────────────────────────────────
+
+const IconUpload = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+  </svg>
+);
+
+const IconWarning = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5 shrink-0">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+  </svg>
+);
+
+const IconCheck = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4 shrink-0">
+    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+  </svg>
+);
+
+const IconX = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4 shrink-0">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+  </svg>
+);
+
+
+const PROVIDERS = [
+  { id: "23andme",    label: "23andMe",     accept: ".txt" },
+  { id: "ancestry",   label: "AncestryDNA", accept: ".txt" },
+  { id: "ftdna",      label: "FTDNA",       accept: ".csv" },
+  { id: "myheritage", label: "MyHeritage",  accept: ".csv" },
+  { id: "livingdna",  label: "LivingDNA",   accept: ".csv,.txt" },
+];
+
+
+interface Sample {
+  id: string;
+  label: string;
+  provider: string;
+  snpCount: number;
+  status: "uploading" | "converting" | "ready" | "error";
+  uploadedAt: string;
+}
+
+const MAX_SAMPLES = 3;
+
+
+
+function PillButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  const [hovered, setHovered] = useState(false);
+  const isHighlight = active || hovered;
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="px-3 py-1.5 text-[11px] uppercase tracking-[1px] border rounded-sm transition-all duration-200"
+      style={{
+        borderColor: isHighlight ? "var(--accent)" : "var(--border-strong)",
+        color: isHighlight ? "var(--accent)" : "var(--text-muted)",
+        background: isHighlight ? "var(--accent-subtle)" : "transparent",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+
+function ActionButton({ onClick, disabled, children, variant = "accent" }: {
+  onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+  variant?: "accent" | "muted" | "danger";
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  const colors = {
+    accent: {
+      border: hovered ? "var(--accent)" : "var(--border-strong)",
+      color: hovered ? "var(--accent)" : "var(--text-muted)",
+      bg: hovered ? "var(--accent-subtle)" : "transparent",
+    },
+    muted: {
+      border: hovered ? "var(--border-strong)" : "var(--border)",
+      color: hovered ? "var(--text-primary)" : "var(--text-faint)",
+      bg: hovered ? "rgba(255,255,255,0.03)" : "transparent",
+    },
+    danger: {
+      border: hovered ? "var(--error-border)" : "var(--border-strong)",
+      color: hovered ? "var(--error-text)" : "var(--text-muted)",
+      bg: hovered ? "var(--error-subtle)" : "transparent",
+    },
+  };
+
+  const c = disabled ? {
+    border: "var(--border)",
+    color: "var(--text-faint)",
+    bg: "transparent",
+  } : colors[variant];
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="w-full py-2.5 text-[11px] uppercase tracking-[2px] font-semibold border rounded-sm transition-all duration-200"
+      style={{
+        borderColor: c.border,
+        color: c.color,
+        background: c.bg,
+        cursor: disabled ? "not-allowed" : "pointer",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+
+function DownloadButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[1px] border rounded-sm transition-all duration-200"
+      style={{
+        borderColor: hovered ? "var(--accent)" : "var(--border-strong)",
+        color: hovered ? "var(--accent)" : "var(--text-muted)",
+        background: hovered ? "var(--accent-subtle)" : "transparent",
+      }}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4 shrink-0">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+      </svg>
+      {children}
+    </button>
+  );
+}
+
+
+function OperationButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  const [hovered, setHovered] = useState(false);
+  const isHighlight = active || hovered;
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="w-full flex items-center gap-3 px-3 py-2.5 text-[11px] uppercase tracking-[1px] text-left border rounded-sm transition-all duration-200"
+      style={{
+        borderColor: isHighlight ? "var(--accent)" : "var(--border-strong)",
+        color: isHighlight ? "var(--accent)" : "var(--text-muted)",
+        background: isHighlight ? "var(--accent-subtle)" : "transparent",
+      }}
+    >
+      <span
+        className="w-2 h-2 rounded-full shrink-0 transition-all duration-200"
+        style={{
+          background: isHighlight ? "var(--accent)" : "var(--border-strong)",
+          boxShadow: active ? "0 0 6px var(--accent)" : "none",
+        }}
+      />
+      {children}
+    </button>
+  );
+}
+
+
+function ManageSamplesBox({ samples }: { samples: Sample[] }) {
+  const [selectedProvider, setSelectedProvider] = useState<string>("");
+  const [sampleLabel, setSampleLabel] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isFull = samples.length >= MAX_SAMPLES;
+
+  const providerObj = PROVIDERS.find((p) => p.id === selectedProvider);
+
+  const handleFileSelect = (file: File) => {
+    setSelectedFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFileSelect(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleUpload = () => {
+    if (!selectedFile || !selectedProvider || !sampleLabel.trim()) return;
+    // TODO: integrate with backend presigned URL upload
+    console.info(`Upload: ${sampleLabel} (${selectedProvider}) — ${selectedFile.name}`);
+    setSelectedFile(null);
+    setSelectedProvider("");
+    setSampleLabel("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  return (
+    <GlowCard delay={0}>
+      {/* Header */}
+      <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b" style={{ borderColor: "var(--border)" }}>
+        <div className="flex items-center gap-2">
+          <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider" style={{ color: "var(--text-bright)" }}>
+            Manage your samples
+          </h3>
+          <span
+            className="text-[10px] uppercase tracking-[2px] px-2 py-0.5 rounded-sm border"
+            style={{
+              borderColor: isFull ? "var(--error-border)" : "var(--border-strong)",
+              color: isFull ? "var(--error-text)" : "var(--text-faint)",
+              background: isFull ? "var(--error-subtle)" : "transparent",
+            }}
+          >
+            {samples.length}/{MAX_SAMPLES}
+          </span>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-5">
+        {isFull ? (
+          <div className="flex items-start gap-3 p-3 sm:p-4 rounded-sm border" style={{ borderColor: "var(--error-border)", background: "var(--error-subtle)" }}>
+            <IconWarning />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--error-text)" }}>
+                Sample limit reached
+              </p>
+              <p className="text-[11px] mt-1.5 leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                You cannot upload more samples. Maximum allowed are {MAX_SAMPLES}. Delete an existing sample to free up a slot.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 sm:gap-5">
+            {/* Sample label */}
+            <div>
+              <label className="block text-[10px] uppercase tracking-[2px] mb-1.5 sm:mb-2" style={{ color: "var(--text-faint)" }}>
+                Sample label
+              </label>
+              <input
+                type="text"
+                value={sampleLabel}
+                onChange={(e) => setSampleLabel(e.target.value)}
+                placeholder="e.g. MySample_Italian"
+                className="w-full px-3 py-2.5 text-sm rounded-sm border outline-none transition-all duration-200 focus:border-[var(--accent)] focus:shadow-[0_0_12px_var(--accent-faint)]"
+                style={{
+                  background: "var(--panel-strong)",
+                  borderColor: "var(--border-strong)",
+                  color: "var(--text-primary)",
+                }}
+              />
+            </div>
+
+            {/* Provider select */}
+            <div>
+              <label className="block text-[10px] uppercase tracking-[2px] mb-1.5 sm:mb-2" style={{ color: "var(--text-faint)" }}>
+                Provider
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {PROVIDERS.map((p) => (
+                  <PillButton key={p.id} active={selectedProvider === p.id} onClick={() => setSelectedProvider(p.id)}>
+                    {p.label}
+                  </PillButton>
+                ))}
+              </div>
+            </div>
+
+            {/* Drop zone */}
+            <div>
+              <label className="block text-[10px] uppercase tracking-[2px] mb-1.5 sm:mb-2" style={{ color: "var(--text-faint)" }}>
+                Raw file
+              </label>
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={() => setDragOver(false)}
+                onClick={() => fileInputRef.current?.click()}
+                className="relative flex flex-col items-center justify-center gap-2 sm:gap-2.5 py-5 sm:py-8 px-4 sm:px-6 border-2 border-dashed rounded-sm cursor-pointer transition-all duration-300"
+                style={{
+                  borderColor: dragOver ? "var(--accent)" : "var(--border-strong)",
+                  background: dragOver ? "var(--accent-faint)" : "rgba(255,255,255,0.01)",
+                  boxShadow: dragOver ? "inset 0 0 30px var(--accent-faint)" : "none",
+                }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={providerObj?.accept || ".txt,.csv"}
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileSelect(file);
+                  }}
+                />
+                {selectedFile ? (
+                  <div className="flex items-center gap-2">
+                    <IconCheck />
+                    <span className="text-xs" style={{ color: "var(--accent)" }}>{selectedFile.name}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="ml-1 p-0.5 transition-colors"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      <IconX />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ color: "var(--text-faint)" }}><IconUpload /></div>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      Drag & drop or <span style={{ color: "var(--accent)" }}>browse</span>
+                    </p>
+                    <p className="text-[10px]" style={{ color: "var(--text-faint)" }}>
+                      {providerObj ? `${providerObj.label} format (${providerObj.accept})` : "Select a provider first"}
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Upload button */}
+            <ActionButton
+              onClick={handleUpload}
+              disabled={!selectedFile || !selectedProvider || !sampleLabel.trim()}
+            >
+              Upload sample
+            </ActionButton>
+          </div>
+        )}
+      </div>
+    </GlowCard>
+  );
+}
+
 
 const NAV_ITEMS = [
-  { id: "samples",   label: "Your samples",        Icon: IconSamples },
+  { id: "samples",   label: "Samples/Labels",       Icon: IconSamples },
   { id: "diy",       label: "DIY Modeling",       Icon: IconDIY },
   { id: "assisted",  label: "Assisted Modeling",   Icon: IconAssisted },
   { id: "learning",  label: "Learning Materials",  Icon: IconLearn },
 ];
 
-// ── Dashboard page ────────────────────────────────────────────────────────────
+
+const DATASETS = [
+  { id: "user",    label: "Your Dataset" },
+  { id: "ancient", label: "Ancient" },
+  { id: "modern",  label: "Modern" },
+];
+
+const LABEL_OPERATIONS = [
+  { id: "replace",       label: "Replace Labels" },
+  { id: "edit_single",   label: "Edit Single Label" },
+  { id: "edit_multiple", label: "Edit Multiple Labels" },
+];
+
+function EditLabelsBox() {
+  const [selectedDataset, setSelectedDataset] = useState<string>("");
+  const [selectedOperation, setSelectedOperation] = useState<string>("");
+
+  return (
+    <GlowCard delay={0.1}>
+      {/* Header */}
+      <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b" style={{ borderColor: "var(--border)" }}>
+        <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider" style={{ color: "var(--text-bright)" }}>
+          Edit your labels here
+        </h3>
+        <p className="text-[11px] mt-1" style={{ color: "var(--text-faint)" }}>
+          Modify population labels across datasets
+        </p>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-5 flex flex-col gap-4 sm:gap-5">
+        {/* Dataset select */}
+        <div>
+          <label className="block text-[10px] uppercase tracking-[2px] mb-2" style={{ color: "var(--text-faint)" }}>
+            Dataset
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {DATASETS.map((d) => (
+              <PillButton key={d.id} active={selectedDataset === d.id} onClick={() => setSelectedDataset(d.id)}>
+                {d.label}
+              </PillButton>
+            ))}
+          </div>
+        </div>
+
+        {/* Operation select */}
+        <AnimatePresence>
+          {selectedDataset && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              <label className="block text-[10px] uppercase tracking-[2px] mb-2" style={{ color: "var(--text-faint)" }}>
+                Operation
+              </label>
+              <div className="flex flex-col gap-2">
+                {LABEL_OPERATIONS.map((op) => {
+                  const active = selectedOperation === op.id;
+                  return (
+                    <OperationButton key={op.id} active={active} onClick={() => setSelectedOperation(op.id)}>
+                      {op.label}
+                    </OperationButton>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Proceed + Reset */}
+        <AnimatePresence>
+          {selectedDataset && selectedOperation && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="flex flex-col gap-2 pt-1"
+            >
+              <ActionButton variant="accent" onClick={() => console.info(`Proceed: ${selectedDataset} → ${selectedOperation}`)}>
+                Proceed
+              </ActionButton>
+              <ActionButton variant="danger" onClick={() => { setSelectedDataset(""); setSelectedOperation(""); }}>
+                Reset
+              </ActionButton>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </GlowCard>
+  );
+}
+
+
+function SamplesSection() {
+  // Mock data — will be replaced with API calls
+  const [samples] = useState<Sample[]>([
+    // Example: uncomment to test "full" state
+    // { id: "1", label: "MySample_Italian", provider: "23andme", snpCount: 620000, status: "ready", uploadedAt: "2025-03-15T10:00:00Z" },
+    // { id: "2", label: "MySample_French", provider: "ancestry", snpCount: 580000, status: "ready", uploadedAt: "2025-03-16T10:00:00Z" },
+    // { id: "3", label: "MySample_German", provider: "ftdna", snpCount: 610000, status: "ready", uploadedAt: "2025-03-17T10:00:00Z" },
+  ]);
+
+  return (
+    <div className="mx-auto flex flex-col gap-4 sm:gap-6 h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:flex-1 lg:min-h-0">
+        {/* LHS — Manage / Upload */}
+        <ManageSamplesBox samples={samples} />
+
+        {/* RHS — Edit Labels */}
+        <EditLabelsBox />
+      </div>
+
+      {/* Download .fam files */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+        className="relative group"
+      >
+        {/* Gradient accent top edge */}
+        <div
+          className="absolute top-0 left-0 right-0 h-[1px] opacity-60 group-hover:opacity-100 transition-opacity duration-500"
+          style={{
+            background: "linear-gradient(90deg, transparent, var(--accent), var(--accent2), var(--accent), transparent)",
+          }}
+        />
+        <div
+          className="px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 border rounded-sm transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(83,189,227,0.06)]"
+          style={{ background: "var(--panel)", borderColor: "var(--border)" }}
+        >
+          <div>
+            <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider" style={{ color: "var(--text-bright)" }}>
+              Download .fam files
+            </h3>
+            <p className="text-[11px] mt-1" style={{ color: "var(--text-faint)" }}>
+              View the sample and population labels in each dataset
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {DATASETS.map((d) => (
+              <DownloadButton key={d.id} onClick={() => console.info(`Download .fam for ${d.id}`)}>
+                {d.label}
+              </DownloadButton>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("samples");
@@ -95,20 +600,35 @@ export default function DashboardPage() {
         {/* Left: Hamburger (mobile) + Logo */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setMobileMenuOpen(true)}
-            className="sm:hidden text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors p-1 -ml-1"
-            aria-label="Open menu"
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            className="sm:hidden relative w-6 h-6 p-1 -ml-1 z-[60]"
+            aria-label="Toggle menu"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
+            <motion.span
+              className="absolute left-1/2 top-1/2 w-4 h-[1.5px]"
+              style={{ x: "-50%", backgroundColor: "var(--accent)" }}
+              animate={mobileMenuOpen ? { y: "-50%", rotate: 45 } : { y: "calc(-50% - 4px)", rotate: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            />
+            <motion.span
+              className="absolute left-1/2 top-1/2 w-4 h-[1.5px]"
+              style={{ x: "-50%", y: "-50%", backgroundColor: "var(--accent)" }}
+              animate={mobileMenuOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
+              transition={{ duration: 0.15 }}
+            />
+            <motion.span
+              className="absolute left-1/2 top-1/2 w-4 h-[1.5px]"
+              style={{ x: "-50%", backgroundColor: "var(--accent)" }}
+              animate={mobileMenuOpen ? { y: "-50%", rotate: -45 } : { y: "calc(-50% + 4px)", rotate: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            />
           </button>
-          <a href="/" className="flex items-center gap-2 sm:gap-3" aria-label="Back to home">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Image src={logoImage} alt="Logo" className="h-6 w-6 sm:h-7 sm:w-7" draggable="false" />
-            <span className="text-[10px] sm:text-[11px] tracking-[4px] uppercase font-bold" style={{ color: "var(--text-bright)" }}>
-              IOA
+            <span className="text-[9px] sm:text-[11px] tracking-[3px] uppercase font-bold" style={{ color: "var(--text-bright)" }}>
+              InsightsOnAncestry
             </span>
-          </a>
+          </div>
         </div>
 
         {/* Centre: Dashboard label */}
@@ -167,7 +687,7 @@ export default function DashboardPage() {
                   <button
                     onClick={() => setDropdownOpen(false)}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-[11px] uppercase tracking-[2px] text-left transition-colors duration-150 hover:bg-white/5"
-                    style={{ color: "rgba(239,68,68,0.7)" }}
+                    style={{ color: "var(--error-text)" }}
                   >
                     <IconLogout />
                     Log Out
@@ -204,19 +724,7 @@ export default function DashboardPage() {
           `}
           style={{ borderColor: "var(--border-strong)", background: "rgba(10,10,10,0.95)" }}
         >
-          {/* Mobile close button */}
-          <div className="flex items-center justify-between px-4 mb-4 sm:hidden">
-            <span className="text-[9px] tracking-[3px] uppercase font-bold" style={{ color: "var(--text-bright)" }}>
-              Menu
-            </span>
-            <button onClick={() => setMobileMenuOpen(false)} className="p-1 text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <p className="px-4 text-[9px] uppercase tracking-[3px] mb-3 hidden sm:block" style={{ color: "var(--text-faint)" }}>
+          <p className="px-4 text-[9px] uppercase tracking-[3px] mb-3 mt-1 sm:mt-0" style={{ color: "var(--text-faint)" }}>
             Tools
           </p>
           <nav className="flex flex-col gap-0.5 px-2">
@@ -232,7 +740,7 @@ export default function DashboardPage() {
                   className="flex items-center gap-3 px-3 py-2.5 text-[11px] uppercase tracking-[2px] text-left transition-all duration-150 rounded-sm"
                   style={{
                     color: active ? "var(--accent)" : "var(--text-muted)",
-                    background: active ? "rgba(83,189,227,0.08)" : "transparent",
+                    background: active ? "var(--accent-subtle)" : "transparent",
                     borderLeft: active ? "2px solid var(--accent)" : "2px solid transparent",
                   }}
                 >
@@ -244,9 +752,9 @@ export default function DashboardPage() {
           </nav>
         </aside>
 
-        {/* Main content area — empty for now */}
-        <main className="flex-1 overflow-auto p-8 relative grid-bg">
-          {/* Content will be added per section in future steps */}
+        {/* Main content area */}
+        <main className="flex-1 overflow-auto p-3 sm:p-6 lg:p-8 relative grid-bg">
+          {activeSection === "samples" && <SamplesSection />}
         </main>
 
       </div>
