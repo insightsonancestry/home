@@ -25,6 +25,12 @@ const IconLearn = () => (
   </svg>
 );
 
+const IconSamples = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4 shrink-0">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9z" />
+  </svg>
+);
+
 const IconUser = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
     <path fillRule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clipRule="evenodd" />
@@ -53,6 +59,7 @@ const IconLogout = () => (
 // ── Sidebar nav items ────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
+  { id: "samples",   label: "Your samples",        Icon: IconSamples },
   { id: "diy",       label: "DIY Modeling",       Icon: IconDIY },
   { id: "assisted",  label: "Assisted Modeling",   Icon: IconAssisted },
   { id: "learning",  label: "Learning Materials",  Icon: IconLearn },
@@ -61,7 +68,7 @@ const NAV_ITEMS = [
 // ── Dashboard page ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const [activeSection, setActiveSection] = useState("diy");
+  const [activeSection, setActiveSection] = useState("samples");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

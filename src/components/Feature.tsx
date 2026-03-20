@@ -21,7 +21,7 @@ export const Feature = ({ title, description }: { title: string, description: st
     return () => {
       window.removeEventListener('mousemove', updateMousePosition);
     };
-  }, []);
+  }, [offsetX, offsetY]);
 
   return (
     <div className="relative px-5 py-6 h-full group panel transition-all duration-300"

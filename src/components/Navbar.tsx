@@ -55,46 +55,50 @@ const itemVariants = {
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [pastHero, setPastHero] = useState(false);
   const { scrollY } = useScroll();
-  const faqsOffsetRef = useRef<number | null>(null);
+  const heroBottomRef = useRef<number>(0);
 
   useEffect(() => {
-    const faqsEl = document.getElementById("faqs");
-    if (faqsEl) {
-      faqsOffsetRef.current = faqsEl.offsetTop;
+    const heroEl = document.querySelector('.hero-section');
+    if (heroEl) {
+      heroBottomRef.current = heroEl.getBoundingClientRect().bottom + window.scrollY;
     }
+    
+    const handleResize = () => {
+      const heroEl = document.querySelector('.hero-section');
+      if (heroEl) {
+        heroBottomRef.current = heroEl.getBoundingClientRect().bottom + window.scrollY;
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
-    const faqsTop = faqsOffsetRef.current ?? Infinity;
-    setScrolled(latest > 50 && latest < faqsTop);
+    setPastHero(heroBottomRef.current > 0 && latest > heroBottomRef.current);
   });
 
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <div className="sticky top-0 z-50 relative">
-      <div className="px-3 sm:px-6 pt-3">
-        <motion.header
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="border-2 backdrop-blur-md transition-all duration-500"
-          style={{
-            borderColor: 'var(--border-strong)',
-            background: scrolled ? 'rgba(10,10,10,0.95)' : 'rgba(10,10,10,0.8)',
-            boxShadow: 'var(--shadow)',
-            maxWidth: scrolled ? '720px' : '1152px',
-            margin: '0 auto',
-          }}
-        >
-          <div className={`px-4 sm:px-6 flex items-center justify-between transition-all duration-500 ${scrolled ? 'h-11' : 'h-14'}`}>
+    <div className="sticky top-0 z-50">
+      <motion.header
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="w-full backdrop-blur-md"
+        style={{
+          background: 'rgba(10,10,10,0.95)',
+          borderBottom: '1px solid rgba(83,189,227,0.12)',
+        }}
+      >
+        <div className="px-4 sm:px-6 flex items-center justify-between h-14 max-w-7xl mx-auto">
             <a href="#" className="flex items-center gap-3" aria-label="Back to top">
               <Image
                 src={logoImage}
                 alt="Logo"
-                className={`transition-all duration-500 ${scrolled ? 'h-6 w-6' : 'h-8 w-8'}`}
+                className="h-8 w-8"
                 draggable="false"
               />
               <span className="text-[11px] sm:text-[13px] tracking-[4px] uppercase font-bold leading-none" style={{ color: 'var(--text-bright)' }}>
@@ -114,37 +118,54 @@ export const Navbar = () => {
             <HamburgerIcon isOpen={isOpen} toggle={() => setIsOpen(!isOpen)} />
           </div>
         </motion.header>
-      </div>
 
-      {/* Mobile menu — absolutely positioned so it overlays content without scrolling */}
+      {/* Mobile menu — side drawer from right */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            variants={menuVariants}
-            initial="closed"
-            animate="open"
-            exit="closed"
-            className="sm:hidden overflow-hidden mx-3 border-x-2 border-b-2 backdrop-blur-md absolute left-0 right-0"
-            style={{
-              borderColor: 'var(--border-strong)',
-              background: 'rgba(10,10,10,0.95)',
-            }}
-          >
-            <nav className="flex flex-col px-4 py-4 gap-1">
-              <motion.a variants={itemVariants} href="#features" onClick={closeMenu}
-                className="py-2.5 px-3 text-[10px] uppercase tracking-[2px] transition-colors hover:bg-white/5"
-                style={{ color: 'var(--text-muted)' }}>[Services]</motion.a>
-              <motion.a variants={itemVariants} href="#faqs" onClick={closeMenu}
-                className="py-2.5 px-3 text-[10px] uppercase tracking-[2px] transition-colors hover:bg-white/5"
-                style={{ color: 'var(--text-muted)' }}>[FAQ]</motion.a>
-              <motion.a variants={itemVariants} href="mailto:insightsonancestry@gmail.com" onClick={closeMenu}
-                className="py-2.5 px-3 text-[10px] uppercase tracking-[2px] transition-colors hover:bg-white/5"
-                style={{ color: 'var(--text-muted)' }}>[Contact]</motion.a>
-              <motion.div variants={itemVariants} className="pt-2 px-3">
-                <ShopButton />
-              </motion.div>
-            </nav>
-          </motion.div>
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeMenu}
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm sm:hidden"
+            />
+            <motion.aside
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 z-50 h-full w-64 sm:hidden"
+              style={{ background: 'rgba(10,10,10,0.98)' }}
+            >
+              <div className="flex items-center justify-between px-4 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
+                <span className="text-[10px] uppercase tracking-[3px] font-bold" style={{ color: 'var(--text-bright)' }}>
+                  Menu
+                </span>
+                <button onClick={closeMenu} className="p-1" style={{ color: 'var(--text-muted)' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <nav className="flex flex-col px-4 py-4 gap-1">
+                <motion.a variants={itemVariants} href="#features" onClick={closeMenu}
+                  className="py-2.5 px-3 text-[10px] uppercase tracking-[2px] transition-colors hover:bg-white/5"
+                  style={{ color: 'var(--text-muted)' }}>Services</motion.a>
+                <motion.a variants={itemVariants} href="#faqs" onClick={closeMenu}
+                  className="py-2.5 px-3 text-[10px] uppercase tracking-[2px] transition-colors hover:bg-white/5"
+                  style={{ color: 'var(--text-muted)' }}>FAQ</motion.a>
+                <motion.a variants={itemVariants} href="mailto:insightsonancestry@gmail.com" onClick={closeMenu}
+                  className="py-2.5 px-3 text-[10px] uppercase tracking-[2px] transition-colors hover:bg-white/5"
+                  style={{ color: 'var(--text-muted)' }}>Contact</motion.a>
+                {pastHero && (
+                  <motion.div variants={itemVariants} className="pt-2">
+                    <ShopButton />
+                  </motion.div>
+                )}
+              </nav>
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
     </div>

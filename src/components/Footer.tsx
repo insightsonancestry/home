@@ -7,7 +7,7 @@ export const Footer = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-[10px] uppercase tracking-[2px]" style={{ color: 'var(--text-faint)' }}>
-              © 2024 Insights on Ancestry, Inc.
+              © {new Date().getFullYear()} Insights on Ancestry, Inc.
             </div>
             <div className="flex gap-6">
               <a

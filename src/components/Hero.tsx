@@ -8,7 +8,7 @@ import BuyButton from './BuyButton';
 
 export const Hero = () => {
   return (
-    <div className="relative overflow-clip">
+    <div className="relative overflow-clip hero-section">
 
       {/* Subtle grid background */}
       {/* Subtle accent glow */}
