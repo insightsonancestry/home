@@ -1,6 +1,6 @@
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { execSync } from "child_process";
-import { createWriteStream, readFileSync, existsSync, mkdirSync, statSync } from "fs";
+import { execFileSync, execSync } from "child_process";
+import { createWriteStream, readFileSync, existsSync, mkdirSync, statSync, rmSync } from "fs";
 import { pipeline } from "stream/promises";
 
 const s3 = new S3Client({});
@@ -24,6 +24,14 @@ const DATASET_FILES = {
   "HO":    { prefix: "v62_HO/v62.0_HO_public",       key: "v62_HO" },
 };
 
+const SAFE_LABEL_RE = /^[a-zA-Z0-9_.\-:]+$/;
+
+function validateLabel(label) {
+  if (typeof label !== "string" || !SAFE_LABEL_RE.test(label) || label.length > 100) {
+    throw new Error(`Invalid population label: ${label}`);
+  }
+}
+
 async function downloadFromS3(key, destPath) {
   const res = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
   await pipeline(res.Body, createWriteStream(destPath));
@@ -35,7 +43,7 @@ async function uploadToS3(localPath, key) {
 }
 
 function cleanWorkDir() {
-  if (existsSync(WORK_DIR)) execSync(`rm -rf ${WORK_DIR}`);
+  if (existsSync(WORK_DIR)) rmSync(WORK_DIR, { recursive: true, force: true });
   mkdirSync(WORK_DIR, { recursive: true });
 }
 
@@ -67,7 +75,6 @@ async function ensureRefDataCached(dataset) {
 export const handler = async (event) => {
   const { action } = event;
 
-  // Warm ping — keep Lambda alive, don't do any work
   if (action === "warmup") {
     return { status: "warm" };
   }
@@ -91,7 +98,8 @@ export const handler = async (event) => {
 
     await downloadFromS3(`${userId}/rawfiles/${sampleId}.txt`, rawLocalPath);
 
-    execSync(`python3 ${CONVERT_SCRIPT} -t ${convertType} -i ${rawLocalPath} -o ${convertedLocalPath}`, {
+    // execFileSync: no shell, args are passed as array — no injection possible
+    execFileSync("python3", [CONVERT_SCRIPT, "-t", convertType, "-i", rawLocalPath, "-o", convertedLocalPath], {
       encoding: "utf-8", timeout: 120_000,
     });
 
@@ -109,7 +117,13 @@ export const handler = async (event) => {
       throw new Error("Missing fields for qpadm");
     }
 
-    // Step 1: Cache reference .bed/.bim from S3 (warm runs skip this)
+    // Validate every label at the Lambda boundary
+    const allLabels = [...sources, ...references, target];
+    for (const label of allLabels) {
+      validateLabel(label);
+    }
+
+    // Step 1: Cache reference .bed/.bim from S3
     const refFiles = await ensureRefDataCached(dataset);
 
     // Step 2: Download user's .fam
@@ -117,29 +131,30 @@ export const handler = async (event) => {
     const famLocalPath = `${WORK_DIR}/user.fam`;
     await downloadFromS3(famS3Key, famLocalPath);
 
-    // Step 3: Extract samples with PLINK
-    const allLabels = [...sources, ...references, target];
+    // Step 3: Extract samples with PLINK — execFileSync, no shell
     const extractedPrefix = `${WORK_DIR}/extracted`;
 
-    execSync([
-      "python3", EXTRACT_SCRIPT,
+    execFileSync("python3", [
+      EXTRACT_SCRIPT,
       "--plink", PLINK,
       "--bed", refFiles.bed,
       "--bim", refFiles.bim,
       "--fam", famLocalPath,
       "--labels", ...allLabels,
       "--out", extractedPrefix,
-    ].join(" "), { encoding: "utf-8", timeout: 240_000 });
+    ], { encoding: "utf-8", timeout: 240_000 });
 
-    // Step 4: Run qpAdm
+    // Step 4: Run qpAdm — execFileSync, no shell
     const outputPath = `${WORK_DIR}/output.txt`;
-    const left = sources.join(",");
-    const right = references.join(",");
 
-    execSync(
-      `Rscript ${QPADM_SCRIPT} ${extractedPrefix} ${outputPath} ${target} "${left}" "${right}"`,
-      { encoding: "utf-8", timeout: 540_000 },
-    );
+    execFileSync("Rscript", [
+      QPADM_SCRIPT,
+      extractedPrefix,
+      outputPath,
+      target,
+      sources.join(","),
+      references.join(","),
+    ], { encoding: "utf-8", timeout: 540_000 });
 
     if (!existsSync(outputPath)) throw new Error("qpAdm produced no output");
 

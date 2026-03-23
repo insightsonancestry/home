@@ -16,11 +16,14 @@ export function sanitizeFileName(name: string): string | null {
   return cleaned;
 }
 
+// Sample labels: alphanumeric, underscores, hyphens, spaces, dots only
+const LABEL_RE = /^[a-zA-Z0-9_.\- ]+$/;
+
 export function sanitizeLabel(label: string): string | null {
-  // Allow alphanumeric, underscores, hyphens, spaces, dots
-  const cleaned = label.replace(/[<>"'&]/g, "").trim();
-  if (!cleaned || cleaned.length > MAX_LABEL_LENGTH) return null;
-  return cleaned;
+  const trimmed = label.trim();
+  if (!trimmed || trimmed.length > MAX_LABEL_LENGTH) return null;
+  if (!LABEL_RE.test(trimmed)) return null;
+  return trimmed;
 }
 
 export function isValidProvider(provider: string): boolean {

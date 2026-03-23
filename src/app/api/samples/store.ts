@@ -108,14 +108,57 @@ export async function updateSampleStatus(
   }));
 }
 
-export async function getNextSlot(userId: string): Promise<number> {
+export async function updateSampleFiles(
+  userId: string,
+  sampleId: string,
+  ogFileName: string,
+  finalFileName: string,
+  s3Key: string,
+): Promise<void> {
+  await client.send(new UpdateCommand({
+    TableName: SAMPLES_TABLE,
+    Key: { userId, sampleId },
+    UpdateExpression: "SET ogFileName = :og, finalFileName = :final, s3Key = :s3",
+    ExpressionAttributeValues: {
+      ":og": ogFileName,
+      ":final": finalFileName,
+      ":s3": s3Key,
+    },
+  }));
+}
+
+/**
+ * Find and atomically claim the next available slot (1-3).
+ * Uses DynamoDB conditional put to prevent two concurrent requests
+ * from claiming the same slot. Retries on conflict.
+ */
+export async function claimNextSlot(
+  userId: string,
+  sampleData: Omit<Sample, "id">,
+): Promise<{ sampleId: string; sample: Sample } | null> {
+  const shortId = userId.replace(/-/g, "").slice(0, 8);
   const samples = await getSamples(userId);
   const taken = new Set(samples.map((s) => {
     const parts = s.id.split("_");
     return parseInt(parts[parts.length - 1], 10);
   }));
-  for (let i = 1; i <= 3; i++) {
-    if (!taken.has(i)) return i;
+
+  for (let slot = 1; slot <= 3; slot++) {
+    if (taken.has(slot)) continue;
+
+    const sampleId = `${shortId}_${slot}`;
+    const sample: Sample = { ...sampleData, id: sampleId };
+
+    try {
+      await addSample(userId, sample);
+      return { sampleId, sample };
+    } catch (err: unknown) {
+      const code = (err as { name?: string }).name;
+      // TransactionCanceledException means the condition failed (slot taken by concurrent request)
+      if (code === "TransactionCanceledException") continue;
+      throw err;
+    }
   }
-  return -1;
+
+  return null;
 }

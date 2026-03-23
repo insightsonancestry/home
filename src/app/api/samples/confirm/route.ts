@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Trigger conversion Lambda asynchronously
+  // If invocation itself fails, revert status to "error" so user isn't stuck
   lambda.send(new InvokeCommand({
     FunctionName: PROCESSING_FN,
     InvocationType: "Event",
@@ -53,8 +54,9 @@ export async function POST(req: NextRequest) {
       provider: sample.provider,
       action: sample.provider === "23andme" ? "plink" : "convert",
     }),
-  })).catch((err) => {
+  })).catch(async (err) => {
     console.error("Failed to trigger processing Lambda:", err);
+    await updateSampleStatus(auth.userId, body.sampleId, "error").catch(() => {});
   });
 
   return NextResponse.json({

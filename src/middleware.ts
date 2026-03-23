@@ -34,8 +34,23 @@ function addSecurityHeaders(response: NextResponse) {
   return response;
 }
 
+const ALLOWED_ORIGINS = new Set([
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://insightsonancestry.com",
+  "https://www.insightsonancestry.com",
+]);
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // CSRF: reject mutation requests from unknown origins
+  if (pathname.startsWith("/api/") && request.method !== "GET") {
+    const origin = request.headers.get("origin");
+    if (origin && !ALLOWED_ORIGINS.has(origin)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
 
   if (pathname.startsWith("/dashboard")) {
     const idToken = request.cookies.get("ioa_id_token")?.value;

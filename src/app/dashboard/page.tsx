@@ -38,14 +38,19 @@ export default function DashboardPage() {
 
   const [samples, setSamples] = useState<Sample[]>([]);
   const [samplesLoading, setSamplesLoading] = useState(true);
+  const [samplesError, setSamplesError] = useState<string | null>(null);
   const samplesFetched = useRef(false);
 
   const loadSamples = useCallback(async () => {
+    setSamplesError(null);
     try {
       const data = await fetchSamples();
       setSamples(data.samples);
-    } catch {}
-    finally { setSamplesLoading(false); }
+    } catch (err) {
+      setSamplesError(err instanceof Error ? err.message : "Failed to load samples");
+    } finally {
+      setSamplesLoading(false);
+    }
   }, []);
 
   const handleDeleteSample = useCallback(async (sampleId: string) => {
@@ -229,7 +234,7 @@ export default function DashboardPage() {
         </aside>
 
         <main className="flex-1 overflow-auto p-3 sm:p-6 lg:p-8 relative grid-bg">
-          {activeSection === "samples" && <SamplesSection samples={samples} loading={samplesLoading} onReload={loadSamples} onDelete={handleDeleteSample} />}
+          {activeSection === "samples" && <SamplesSection samples={samples} loading={samplesLoading} error={samplesError} onReload={loadSamples} onDelete={handleDeleteSample} />}
           {activeSection === "diy" && <DIYModelingSection sampleLabels={samples.filter((s) => s.status === "ready").map((s) => s.label)} />}
           {(activeSection === "assisted" || activeSection === "learning" || activeSection === "history") && SECTIONS[activeSection]}
         </main>

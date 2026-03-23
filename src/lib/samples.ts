@@ -26,6 +26,8 @@ export async function presignUpload(body: {
   return data;
 }
 
+const UPLOAD_TIMEOUT_MS = 5 * 60 * 1000; // 5 min
+
 export function uploadToS3(
   url: string,
   file: File,
@@ -34,6 +36,7 @@ export function uploadToS3(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", url);
+    xhr.timeout = UPLOAD_TIMEOUT_MS;
 
     xhr.upload.addEventListener("progress", (e) => {
       if (e.lengthComputable && onProgress) {
@@ -47,6 +50,7 @@ export function uploadToS3(
     });
 
     xhr.addEventListener("error", () => reject(new Error("S3 upload failed")));
+    xhr.addEventListener("timeout", () => reject(new Error("Upload timed out")));
     xhr.send(file);
   });
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, safeJson } from "@/lib/auth-verify";
-import { getSamples, addSample, getNextSlot } from "../store";
+import { getSamples, claimNextSlot } from "../store";
 import { createPresignedUploadUrl } from "@/lib/s3";
 import { sanitizeFileName, sanitizeLabel, isValidProvider } from "@/lib/sanitize";
 import { MAX_SAMPLES } from "@/constants/dashboard";
@@ -44,32 +44,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid file name" }, { status: 400 });
   }
 
-  const slot = await getNextSlot(auth.userId);
-  if (slot === -1) {
-    return NextResponse.json({ error: "No available sample slots" }, { status: 400 });
-  }
+  // Atomically claim a slot — prevents race condition where two concurrent
+  // uploads claim the same slot and overwrite each other's S3 file
   const shortId = auth.userId.replace(/-/g, "").slice(0, 8);
-  const sampleId = `${shortId}_${slot}`;
+  const ogFileName = (slotSampleId: string) => `${slotSampleId}.txt`;
+  const finalFileName = (slotSampleId: string) =>
+    body.provider === "23andme" ? `${slotSampleId}.txt` : `${slotSampleId}_23.txt`;
 
-  const { url: uploadUrl, s3Key } = await createPresignedUploadUrl(
-    auth.userId,
-    `${sampleId}.txt`,
-  );
-
-  const ogFileName = `${sampleId}.txt`;
-  const finalFileName = body.provider === "23andme" ? ogFileName : `${sampleId}_23.txt`;
-
-  await addSample(auth.userId, {
-    id: sampleId,
+  // We don't know the sampleId yet (depends on which slot is free), so we
+  // generate presigned URL after claiming the slot
+  const claimed = await claimNextSlot(auth.userId, {
     label,
     provider: body.provider,
     status: "uploading",
     uploadedAt: new Date().toISOString(),
     fileSize: 0,
-    ogFileName,
-    finalFileName,
-    s3Key,
+    ogFileName: "", // placeholder, updated below
+    finalFileName: "",
+    s3Key: "",
   });
+
+  if (!claimed) {
+    return NextResponse.json({ error: "No available sample slots" }, { status: 400 });
+  }
+
+  const { sampleId } = claimed;
+  const og = ogFileName(sampleId);
+  const final = finalFileName(sampleId);
+
+  const { url: uploadUrl, s3Key } = await createPresignedUploadUrl(auth.userId, og);
+
+  // Update the sample record with actual file names and S3 key
+  const { updateSampleFiles } = await import("../store");
+  await updateSampleFiles(auth.userId, sampleId, og, final, s3Key);
 
   return NextResponse.json({ sampleId, uploadUrl, expiresIn: 900 });
 }

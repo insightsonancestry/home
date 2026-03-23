@@ -1,6 +1,6 @@
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { execSync } from "child_process";
-import { createWriteStream, readFileSync, existsSync, mkdirSync } from "fs";
+import { execFileSync } from "child_process";
+import { createWriteStream, readFileSync, existsSync, mkdirSync, rmSync } from "fs";
 import { pipeline } from "stream/promises";
 
 const s3 = new S3Client({});
@@ -23,6 +23,14 @@ const DATASET_MAP = {
   "HO":    { bed: "v62_HO/v62.0_HO_public.bed",       bim: "v62_HO/v62.0_HO_public.bim" },
 };
 
+const SAFE_LABEL_RE = /^[a-zA-Z0-9_.\-:]+$/;
+
+function validateLabel(label) {
+  if (typeof label !== "string" || !SAFE_LABEL_RE.test(label) || label.length > 100) {
+    throw new Error(`Invalid population label: ${label}`);
+  }
+}
+
 async function downloadFromS3(key, destPath) {
   const res = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
   await pipeline(res.Body, createWriteStream(destPath));
@@ -34,7 +42,7 @@ async function uploadToS3(localPath, key) {
 }
 
 function cleanWorkDir() {
-  if (existsSync(WORK_DIR)) execSync(`rm -rf ${WORK_DIR}`);
+  if (existsSync(WORK_DIR)) rmSync(WORK_DIR, { recursive: true, force: true });
   mkdirSync(WORK_DIR, { recursive: true });
 }
 
@@ -62,14 +70,9 @@ export const handler = async (event) => {
 
     await downloadFromS3(rawS3Key, rawLocalPath);
 
-    try {
-      execSync(`python3 ${CONVERT_SCRIPT} -t ${convertType} -i ${rawLocalPath} -o ${convertedLocalPath}`, {
-        encoding: "utf-8", timeout: 120_000,
-      });
-    } catch (err) {
-      console.error("Conversion stderr:", err.stderr);
-      throw new Error("File format conversion failed");
-    }
+    execFileSync("python3", [CONVERT_SCRIPT, "-t", convertType, "-i", rawLocalPath, "-o", convertedLocalPath], {
+      encoding: "utf-8", timeout: 120_000,
+    });
 
     if (!existsSync(convertedLocalPath)) throw new Error("Conversion produced no output file");
     await uploadToS3(convertedLocalPath, convertedS3Key);
@@ -87,38 +90,30 @@ export const handler = async (event) => {
     const ds = DATASET_MAP[dataset];
     if (!ds) throw new Error(`Invalid dataset: ${dataset}`);
 
+    // Validate every label
+    const allLabels = [...sources, ...references, target];
+    for (const label of allLabels) {
+      validateLabel(label);
+    }
+
     const bedPath = `${EFS_DATA}/${ds.bed}`;
     const bimPath = `${EFS_DATA}/${ds.bim}`;
     const famS3Key = `${userId}/qpadm/datasets/${userId}_${dataset}.fam`;
     const famLocalPath = `${WORK_DIR}/user.fam`;
     const outputPrefix = `${WORK_DIR}/extracted`;
 
-    // Download user's .fam from S3
     await downloadFromS3(famS3Key, famLocalPath);
 
-    // All labels to extract
-    const allLabels = [...sources, ...references, target];
-
-    // Run extraction
-    const cmd = [
-      "python3", EXTRACT_SCRIPT,
+    execFileSync("python3", [
+      EXTRACT_SCRIPT,
       "--plink", PLINK,
       "--bed", bedPath,
       "--bim", bimPath,
       "--fam", famLocalPath,
       "--labels", ...allLabels,
       "--out", outputPrefix,
-    ].join(" ");
+    ], { encoding: "utf-8", timeout: 240_000 });
 
-    try {
-      const output = execSync(cmd, { encoding: "utf-8", timeout: 240_000 });
-      console.log("Extract output:", output);
-    } catch (err) {
-      console.error("Extract stderr:", err.stderr);
-      throw new Error("Sample extraction failed");
-    }
-
-    // Upload extracted files to S3
     const extensions = ["bed", "bim", "fam"];
     const uploadedFiles = [];
     const tempPrefix = `${userId}/qpadm/datasets/temp_${runId}`;

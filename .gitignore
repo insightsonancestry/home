@@ -42,3 +42,15 @@ process_sample.py
 user_base.bed
 user_base.bim
 user_base.fam
+plink.snplist
+
+# debug/scratch files
+out.txt
+tes.log
+
+# scratch docs
+upload.md
+qpadm-plan.md
+
+# Claude Code local config
+.claude/

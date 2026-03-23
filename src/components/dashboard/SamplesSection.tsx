@@ -10,14 +10,22 @@ import { DATASETS, type Sample } from "@/constants/dashboard";
 interface SamplesSectionProps {
   samples: Sample[];
   loading: boolean;
+  error?: string | null;
   onReload: () => void;
   onDelete: (sampleId: string) => Promise<void>;
 }
 
-export function SamplesSection({ samples, loading, onReload, onDelete }: SamplesSectionProps) {
+export function SamplesSection({ samples, loading, error, onReload, onDelete }: SamplesSectionProps) {
   return (
     <div className="mx-auto flex flex-col gap-4 sm:gap-6 h-full">
       <SectionHeader title="Samples & Labels" description="Upload raw files and manage population labels" />
+
+      {error && (
+        <div className="flex items-center gap-3 px-4 py-3 border rounded-sm" style={{ borderColor: "var(--error-border)", background: "var(--error-subtle)" }}>
+          <p className="text-xs" style={{ color: "var(--error-text)" }}>{error}</p>
+          <button onClick={onReload} className="text-xs underline shrink-0" style={{ color: "var(--error-text)" }}>Retry</button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-start">
         <ManageSamplesBox samples={samples} loading={loading} onUploadComplete={onReload} onDelete={onDelete} />

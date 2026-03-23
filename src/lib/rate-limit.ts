@@ -1,8 +1,10 @@
 /**
  * In-memory sliding window rate limiter.
  *
- * Each limiter tracks requests per key (IP or userId) within a time window.
- * Expired entries are lazily cleaned up.
+ * LIMITATION: State is per-process. In multi-instance deployments (Vercel, ECS),
+ * each instance tracks independently. An attacker hitting N instances gets N× the
+ * limit. For production at scale, replace with Redis or DynamoDB-backed counters.
+ * Acceptable for single-instance / low-traffic deployments.
  *
  * Usage:
  *   const limiter = createRateLimiter({ windowMs: 60_000, max: 5 });

@@ -4,6 +4,7 @@ import { isValidDataset, validatePopulationLabels, isValidPopulationLabel } from
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { randomUUID } from "crypto";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { getActiveRuns, runSubmissions } from "./run-tracker";
 
 const lambda = new LambdaClient({ region: process.env.AWS_REGION || "us-east-1" });
 const PROCESSING_FN = process.env.PROCESSING_FUNCTION_NAME || "ioa-processing";
@@ -13,7 +14,6 @@ const MAX_REFERENCES = 15;
 const MAX_CONCURRENT_RUNS = 2;
 
 const qpadmLimiter = createRateLimiter({ windowMs: 600_000, max: 10 });
-const activeRuns = new Map<string, Set<string>>();
 
 interface QpadmBody {
   dataset: string;
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
   const refsError = validatePopulationLabels(references);
   if (refsError) return NextResponse.json({ error: refsError }, { status: 400 });
 
-  const userRuns = activeRuns.get(auth.userId) || new Set();
+  const userRuns = getActiveRuns(auth.userId);
   if (userRuns.size >= MAX_CONCURRENT_RUNS) {
     return NextResponse.json(
       { error: `Maximum ${MAX_CONCURRENT_RUNS} concurrent runs allowed. Wait for a run to finish.` },
@@ -72,9 +72,10 @@ export async function POST(req: NextRequest) {
   }
 
   const runId = randomUUID().slice(0, 8);
+  const now = Date.now();
 
-  userRuns.add(runId);
-  activeRuns.set(auth.userId, userRuns);
+  userRuns.set(runId, now);
+  runSubmissions.set(runId, now);
 
   try {
     await lambda.send(new InvokeCommand({
@@ -95,6 +96,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("qpAdm submission error:", err);
     userRuns.delete(runId);
+    runSubmissions.delete(runId);
     return NextResponse.json({ error: "Failed to submit qpAdm job" }, { status: 500 });
   }
 }

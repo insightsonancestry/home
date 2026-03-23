@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClearButton } from "./buttons";
 import { useClickOutside } from "@/hooks/useClickOutside";
+
+const MAX_VISIBLE = 200;
 
 export function SearchableSelect({ label, options, selected, onChange, multi = true }: {
   label: string;
@@ -13,14 +15,37 @@ export function SearchableSelect({ label, options, selected, onChange, multi = t
   multi?: boolean;
 }) {
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useClickOutside<HTMLDivElement>(useCallback(() => setOpen(false), []));
 
-  const filtered = options.filter(
-    (o) => o.toLowerCase().includes(query.toLowerCase()) && !selected.includes(o)
+  // Debounce query — prevents re-filtering 17k labels on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 150);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  // Pre-compute lowercase options once when options array changes
+  const optionsLower = useMemo(
+    () => options.map((o) => ({ original: o, lower: o.toLowerCase() })),
+    [options],
   );
+
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
+
+  const filtered = useMemo(() => {
+    const q = debouncedQuery.toLowerCase();
+    const results: string[] = [];
+    for (const { original, lower } of optionsLower) {
+      if (selectedSet.has(original)) continue;
+      if (q && !lower.includes(q)) continue;
+      results.push(original);
+      if (results.length >= MAX_VISIBLE) break;
+    }
+    return results;
+  }, [debouncedQuery, optionsLower, selectedSet]);
 
   const handleSelect = (item: string) => {
     onChange(multi ? [...selected, item] : [item]);
