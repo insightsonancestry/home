@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to ECR...
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com
+  build:
+    commands:
+      - echo Building processing image...
+      - docker build -t ioa-admixtools:latest ./admixtools
+      - docker tag ioa-admixtools:latest ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/ioa-admixtools:latest
+  post_build:
+    commands:
+      - echo Pushing to ECR...
+      - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/ioa-admixtools:latest
+      - echo Build completed

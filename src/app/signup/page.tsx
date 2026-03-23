@@ -1,17 +1,20 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { StaticNavbar } from "@/components/StaticNavbar";
 import { useMouseGlow } from "@/hooks/useMouseGlow";
 import { Footer } from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
+import { validateEmail, validatePassword, validateName, validateCountry } from "@/lib/validation";
 
 const COUNTRIES = [
   "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia","Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo (Congo-Brazzaville)","Costa Rica","Croatia","Cuba","Cyprus","Czechia","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine State","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"
 ];
 
 const inputStyle = {
-  background: "rgba(255,255,255,0.04)",
+  background: "var(--input-bg)",
   border: "1px solid var(--border-strong)",
   color: "var(--text-primary)",
   outline: "none",
@@ -98,7 +101,25 @@ function AuthCard({ children }: { children: React.ReactNode }) {
 }
 
 export default function SignupPage() {
+  const router = useRouter();
+  const { user, loading, signIn: authSignIn } = useAuth();
   const [step, setStep] = useState<"form" | "verify" | "login">("form");
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) router.replace("/dashboard");
+  }, [loading, user, router]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((v) => v - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
   const [form, setForm] = useState({
     firstName: "",
     middleName: "",
@@ -120,16 +141,83 @@ export default function SignupPage() {
     setLoginForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStep("verify");
+    setError("");
+
+    const validationError =
+      validateName(form.firstName, "First name") ||
+      validateName(form.lastName, "Last name") ||
+      validateCountry(form.country) ||
+      validateEmail(form.email) ||
+      validatePassword(form.password);
+
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setForm((prev) => ({ ...prev, password: "" }));
+      setStep("verify");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleConfirm = (e: React.FormEvent) => {
+  const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = otp.join("");
     if (code.length < 6) return;
-    console.info(`Code submitted: ${code} — backend verification coming soon.`);
+    setError("");
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/auth/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, code }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setLoginForm({ email: "", password: "" });
+      setSuccessMsg("Account verified! You can now safely login.");
+      setError("");
+      setStep("login");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Verification failed.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccessMsg("");
+
+    const emailErr = validateEmail(loginForm.email);
+    if (emailErr) { setError(emailErr); return; }
+    if (!loginForm.password) { setError("Password is required"); return; }
+
+    setSubmitting(true);
+    try {
+      await authSignIn(loginForm.email, loginForm.password);
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Login failed.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -168,7 +256,7 @@ export default function SignupPage() {
                     Already have an account?{" "}
                     <button
                       type="button"
-                      onClick={() => setStep("login")}
+                      onClick={() => { setError(""); setSuccessMsg(""); setStep("login"); }}
                       className="font-medium transition-colors duration-150"
                       style={{ color: "var(--accent)" }}
                     >
@@ -178,6 +266,11 @@ export default function SignupPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
+                  {error && (
+                    <div className="px-3 py-2.5 text-xs rounded-sm border" style={{ borderColor: "var(--error-border)", color: "var(--error-text)", background: "var(--error-subtle)" }}>
+                      {error}
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[10px] uppercase tracking-[2px]" style={{ color: "var(--text-muted)" }}>
@@ -222,11 +315,11 @@ export default function SignupPage() {
                     <select
                       id="country" name="country" required value={form.country} onChange={handleChange}
                       className="px-3 py-2.5 text-sm rounded-sm transition-all duration-200 focus:border-[var(--accent)] cursor-pointer appearance-none"
-                      style={{ ...inputStyle, color: form.country ? "var(--text-primary)" : "rgba(255,255,255,0.3)" }}
+                      style={{ ...inputStyle, color: form.country ? "var(--text-primary)" : "var(--text-faint)" }}
                     >
-                      <option value="" disabled style={{ background: "#0f0f0f" }}>Where are you from?</option>
+                      <option value="" disabled style={{ background: "var(--panel)" }}>Where are you from?</option>
                       {COUNTRIES.map((c) => (
-                        <option key={c} value={c} style={{ background: "#0f0f0f", color: "rgba(255,255,255,0.85)" }}>{c}</option>
+                        <option key={c} value={c} style={{ background: "var(--panel)", color: "var(--text-primary)" }}>{c}</option>
                       ))}
                     </select>
                   </div>
@@ -276,14 +369,15 @@ export default function SignupPage() {
                   </div>
 
                   <motion.button
-                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    whileHover={submitting ? {} : { scale: 1.02 }} whileTap={submitting ? {} : { scale: 0.98 }}
                     type="submit"
-                    className="mt-2 relative flex items-center justify-center gap-2 px-6 py-3 font-bold text-xs uppercase tracking-[2px] border transition-all duration-300 cursor-pointer group"
+                    disabled={submitting}
+                    className="mt-2 relative flex items-center justify-center gap-2 px-6 py-3 font-bold text-xs uppercase tracking-[2px] border transition-all duration-300 cursor-pointer group disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "var(--accent-subtle)" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-hover)"; }}
+                    onMouseEnter={(e) => { if (!submitting) (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-hover)"; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-subtle)"; }}
                   >
-                    Create Account
+                    {submitting ? "Creating..." : "Create Account"}
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 group-hover:translate-x-1 transition-transform">
                       <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
                     </svg>
@@ -333,18 +427,23 @@ export default function SignupPage() {
                 </div>
 
                 <form onSubmit={handleConfirm} className="flex flex-col gap-6">
+                  {error && (
+                    <div className="px-3 py-2.5 text-xs rounded-sm border" style={{ borderColor: "var(--error-border)", color: "var(--error-text)", background: "var(--error-subtle)" }}>
+                      {error}
+                    </div>
+                  )}
                   <OtpInput value={otp} onChange={setOtp} />
 
                   <motion.button
-                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    whileHover={submitting ? {} : { scale: 1.02 }} whileTap={submitting ? {} : { scale: 0.98 }}
                     type="submit"
-                    disabled={otp.join("").length < 6}
+                    disabled={otp.join("").length < 6 || submitting}
                     className="relative flex items-center justify-center gap-2 px-6 py-3 font-bold text-xs uppercase tracking-[2px] border transition-all duration-300 cursor-pointer group disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "var(--accent-subtle)" }}
-                    onMouseEnter={(e) => { if (otp.join("").length === 6) (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-hover)"; }}
+                    onMouseEnter={(e) => { if (!submitting && otp.join("").length === 6) (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-hover)"; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-subtle)"; }}
                   >
-                    Confirm
+                    {submitting ? "Verifying..." : "Confirm"}
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 group-hover:translate-x-1 transition-transform">
                       <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
                     </svg>
@@ -352,13 +451,25 @@ export default function SignupPage() {
 
                   <p className="text-center text-sm leading-relaxed" style={{ color: "var(--text-faint)" }}>
                     Didn&apos;t receive it?{" "}
-                    <button type="button" className="accent-link" style={{ color: "var(--accent)" }}
-                      onClick={() => console.info("Resend coming in Phase 2")}>
-                      Resend code
+                    <button
+                      type="button"
+                      className="accent-link"
+                      style={{ color: resendCooldown > 0 ? "var(--text-faint)" : "var(--accent)" }}
+                      disabled={resendCooldown > 0}
+                      onClick={() => {
+                        fetch("/api/auth/resend", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ email: form.email }),
+                        }).catch(() => {});
+                        setResendCooldown(60);
+                      }}
+                    >
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
                     </button>
                     {" · "}
                     <button type="button" className="accent-link" style={{ color: "var(--text-muted)" }}
-                      onClick={() => { setStep("form"); setOtp(["","","","","",""]); }}>
+                      onClick={() => { setError(""); setStep("form"); setOtp(["","","","","",""]); }}>
                       Go back
                     </button>
                   </p>
@@ -391,7 +502,7 @@ export default function SignupPage() {
                     Don&apos;t have an account?{" "}
                     <button
                       type="button"
-                      onClick={() => setStep("form")}
+                      onClick={() => { setError(""); setStep("form"); }}
                       className="font-medium transition-colors duration-150"
                       style={{ color: "var(--accent)" }}
                     >
@@ -400,7 +511,17 @@ export default function SignupPage() {
                   </p>
                 </div>
 
-                <form onSubmit={(e) => { e.preventDefault(); console.info("Login submitted — backend integration coming soon."); }} className="flex flex-col gap-3 sm:gap-4">
+                <form onSubmit={handleLogin} className="flex flex-col gap-3 sm:gap-4">
+                  {successMsg && (
+                    <div className="px-3 py-2.5 text-xs rounded-sm border" style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "var(--accent-subtle)" }}>
+                      {successMsg}
+                    </div>
+                  )}
+                  {error && (
+                    <div className="px-3 py-2.5 text-xs rounded-sm border" style={{ borderColor: "var(--error-border)", color: "var(--error-text)", background: "var(--error-subtle)" }}>
+                      {error}
+                    </div>
+                  )}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] uppercase tracking-[2px]" style={{ color: "var(--text-muted)" }}>
                       Email Address <span style={{ color: "var(--accent)" }}>*</span>
@@ -457,14 +578,15 @@ export default function SignupPage() {
                   </div>
 
                   <motion.button
-                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    whileHover={submitting ? {} : { scale: 1.02 }} whileTap={submitting ? {} : { scale: 0.98 }}
                     type="submit"
-                    className="mt-2 relative flex items-center justify-center gap-2 px-6 py-3 font-bold text-xs uppercase tracking-[2px] border transition-all duration-300 cursor-pointer group"
+                    disabled={submitting}
+                    className="mt-2 relative flex items-center justify-center gap-2 px-6 py-3 font-bold text-xs uppercase tracking-[2px] border transition-all duration-300 cursor-pointer group disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "var(--accent-subtle)" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-hover)"; }}
+                    onMouseEnter={(e) => { if (!submitting) (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-hover)"; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-subtle)"; }}
                   >
-                    Log In
+                    {submitting ? "Logging in..." : "Log In"}
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 group-hover:translate-x-1 transition-transform">
                       <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
                     </svg>

@@ -34,3 +34,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local scripts and PLINK datasets
+convert_2_23andme.py
+merge_raw.py
+process_sample.py
+user_base.bed
+user_base.bim
+user_base.fam

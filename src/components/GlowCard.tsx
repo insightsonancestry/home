@@ -11,6 +11,7 @@ interface GlowCardProps {
 
 export function GlowCard({ children, delay = 0, animate = true, className = "" }: GlowCardProps) {
   const { ref, maskImage } = useMouseGlow(180);
+  const { ref: glowRef, maskImage: glowMask } = useMouseGlow(250);
 
   const content = (
     <div className={`relative h-full group ${className}`}>
@@ -25,10 +26,19 @@ export function GlowCard({ children, delay = 0, animate = true, className = "" }
         className="absolute inset-0 border rounded-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
         style={{ borderColor: "var(--accent)", WebkitMaskImage: maskImage, maskImage }}
       />
+      <motion.div
+        ref={glowRef}
+        className="absolute inset-0 rounded-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{
+          background: "radial-gradient(circle, rgba(var(--accent-rgb), 0.03), transparent 70%)",
+          WebkitMaskImage: glowMask,
+          maskImage: glowMask,
+        }}
+      />
       <div
         className="relative h-full flex flex-col rounded-sm border transition-all duration-300"
         style={{
-          background: "var(--panel)",
+          background: "linear-gradient(to bottom, var(--panel), var(--bg))",
           borderColor: "var(--border)",
           boxShadow: "var(--shadow)",
         }}
