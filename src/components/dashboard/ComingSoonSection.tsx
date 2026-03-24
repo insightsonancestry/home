@@ -48,7 +48,7 @@ export function ComingSoonSection({ title, description, icon }: {
 
           <div className="relative text-center flex flex-col items-center gap-3">
             <span
-              className="text-[10px] uppercase tracking-[3px] px-3 py-1 rounded-sm border"
+              className="text-[9px] uppercase tracking-[2px] px-3 py-1 rounded-sm border font-bold"
               style={{
                 borderColor: "var(--accent)",
                 color: "var(--accent)",

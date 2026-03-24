@@ -6,12 +6,34 @@ import {
   ResendConfirmationCodeCommand,
   GlobalSignOutCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
+import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 import { createHmac } from "crypto";
 
 const client = new CognitoIdentityProviderClient({ region: process.env.COGNITO_REGION! });
+const smClient = new SecretsManagerClient({ region: process.env.COGNITO_REGION! });
 
-function secretHash(username: string): string {
-  return createHmac("sha256", process.env.COGNITO_CLIENT_SECRET!)
+let cachedSecret: string | null = null;
+
+async function getClientSecret(): Promise<string> {
+  if (cachedSecret) return cachedSecret;
+
+  // In development, use env var directly
+  if (process.env.NODE_ENV !== "production" && process.env.COGNITO_CLIENT_SECRET) {
+    cachedSecret = process.env.COGNITO_CLIENT_SECRET;
+    return cachedSecret;
+  }
+
+  const result = await smClient.send(new GetSecretValueCommand({
+    SecretId: "ioa/cognito-client-secret",
+  }));
+  if (!result.SecretString) throw new Error("Failed to retrieve client secret");
+  cachedSecret = result.SecretString;
+  return cachedSecret;
+}
+
+async function secretHash(username: string): Promise<string> {
+  const secret = await getClientSecret();
+  return createHmac("sha256", secret)
     .update(username + process.env.COGNITO_CLIENT_ID!)
     .digest("base64");
 }
@@ -27,7 +49,7 @@ export async function serverSignUp(params: {
   const email = params.email.trim().toLowerCase();
   await client.send(new SignUpCommand({
     ClientId: process.env.COGNITO_CLIENT_ID!,
-    SecretHash: secretHash(email),
+    SecretHash: await secretHash(email),
     Username: email,
     Password: params.password,
     UserAttributes: [
@@ -44,7 +66,7 @@ export async function serverConfirmSignUp(email: string, code: string) {
   const normalized = email.trim().toLowerCase();
   await client.send(new ConfirmSignUpCommand({
     ClientId: process.env.COGNITO_CLIENT_ID!,
-    SecretHash: secretHash(normalized),
+    SecretHash: await secretHash(normalized),
     Username: normalized,
     ConfirmationCode: code,
   }));
@@ -54,7 +76,7 @@ export async function serverResendCode(email: string) {
   const normalized = email.trim().toLowerCase();
   await client.send(new ResendConfirmationCodeCommand({
     ClientId: process.env.COGNITO_CLIENT_ID!,
-    SecretHash: secretHash(normalized),
+    SecretHash: await secretHash(normalized),
     Username: normalized,
   }));
 }
@@ -67,7 +89,7 @@ export async function serverSignIn(email: string, password: string) {
     AuthParameters: {
       USERNAME: normalized,
       PASSWORD: password,
-      SECRET_HASH: secretHash(normalized),
+      SECRET_HASH: await secretHash(normalized),
     },
   }));
   return result.AuthenticationResult!;
@@ -79,7 +101,7 @@ export async function serverRefreshTokens(refreshToken: string, username: string
     AuthFlow: "REFRESH_TOKEN_AUTH",
     AuthParameters: {
       REFRESH_TOKEN: refreshToken,
-      SECRET_HASH: secretHash(username),
+      SECRET_HASH: await secretHash(username),
     },
   }));
   return result.AuthenticationResult!;

@@ -13,6 +13,7 @@ import { fetchSamples, deleteSample } from "@/lib/samples";
 import { SamplesSection } from "@/components/dashboard/SamplesSection";
 import { DIYModelingSection } from "@/components/dashboard/DIYModelingSection";
 import { ComingSoonSection } from "@/components/dashboard/ComingSoonSection";
+import { HistorySection } from "@/components/dashboard/HistorySection";
 import { DashboardErrorBoundary } from "@/components/dashboard/ErrorBoundary";
 
 const NAV_ICONS: Record<string, React.ComponentType> = {
@@ -26,7 +27,6 @@ const NAV_ICONS: Record<string, React.ComponentType> = {
 const SECTIONS: Record<string, React.ReactNode> = {
   assisted: <ComingSoonSection title="Assisted Modeling" description="Run preset models from published genetics papers with curated source and reference configurations" icon={<IconAssisted />} />,
   learning: <ComingSoonSection title="Learning Materials" description="Tutorials, guides, and documentation for population genetics analysis" icon={<IconLearn />} />,
-  history: <ComingSoonSection title="History" description="View and manage all your past model runs and results" icon={<IconHistory />} />,
 };
 
 export default function DashboardPage() {
@@ -84,7 +84,7 @@ export default function DashboardPage() {
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: "var(--bg)" }}>
-        <span className="text-xs uppercase tracking-[3px]" style={{ color: "var(--text-faint)" }}>Loading...</span>
+        <span className="text-xs uppercase tracking-[2px]" style={{ color: "var(--text-faint)" }}>Loading...</span>
       </div>
     );
   }
@@ -124,14 +124,14 @@ export default function DashboardPage() {
           </button>
           <div className="flex items-center gap-2 sm:gap-3">
             <Image src={logoImage} alt="Logo" className="h-6 w-6 sm:h-7 sm:w-7" draggable="false" />
-            <span className="text-[9px] sm:text-xs tracking-[3px] uppercase font-bold" style={{ color: "var(--text-bright)" }}>
+            <span className="text-[9px] sm:text-xs tracking-[2px] uppercase font-bold" style={{ color: "var(--text-bright)" }}>
               InsightsOnAncestry
             </span>
           </div>
         </div>
 
         <span
-          className="absolute left-1/2 -translate-x-1/2 text-xs uppercase tracking-[3px] font-semibold hidden sm:block"
+          className="absolute left-1/2 -translate-x-1/2 text-xs uppercase tracking-[2px] font-semibold hidden sm:block"
           style={{ color: "var(--text-muted)" }}
         >
           Dashboard
@@ -219,7 +219,7 @@ export default function DashboardPage() {
           `}
           style={{ borderColor: "var(--border-strong)", background: "var(--overlay-bg)" }}
         >
-          <p className="px-4 text-[9px] uppercase tracking-[3px] mb-3 mt-1 sm:mt-0" style={{ color: "var(--text-faint)" }}>
+          <p className="px-4 text-[9px] uppercase tracking-[2px] mb-3 mt-1 sm:mt-0" style={{ color: "var(--text-faint)" }}>
             Tools
           </p>
           <nav className="flex flex-col gap-0.5 px-2">
@@ -256,7 +256,10 @@ export default function DashboardPage() {
             <div style={{ display: activeSection === "diy" ? undefined : "none" }}>
               <DIYModelingSection sampleLabels={samples.filter((s) => s.status === "ready").map((s) => s.label)} />
             </div>
-            {(activeSection === "assisted" || activeSection === "learning" || activeSection === "history") && SECTIONS[activeSection]}
+            <div style={{ display: activeSection === "history" ? undefined : "none" }}>
+              <HistorySection visible={activeSection === "history"} />
+            </div>
+            {(activeSection === "assisted" || activeSection === "learning") && SECTIONS[activeSection]}
           </DashboardErrorBoundary>
         </main>
       </div>

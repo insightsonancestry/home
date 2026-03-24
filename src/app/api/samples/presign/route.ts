@@ -5,6 +5,7 @@ import { createPresignedUploadUrl } from "@/lib/s3";
 import { sanitizeFileName, sanitizeLabel, isValidProvider } from "@/lib/sanitize";
 import { MAX_SAMPLES } from "@/constants/dashboard";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { auditLog } from "@/lib/audit";
 import { getReferenceLabels } from "@/lib/ref-labels";
 
 const uploadLimiter = createRateLimiter({ name: "upload", windowMs: 60_000, max: 6 });
@@ -21,16 +22,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const body = await safeJson<{ label: string; provider: string; fileName: string; fileSize?: number }>(req);
+  const body = await safeJson<{ label: string; provider: string; fileName: string; fileSize: number }>(req);
   if (!body) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
   const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
-  if (body.fileSize !== undefined) {
-    if (typeof body.fileSize !== "number" || body.fileSize <= 0 || body.fileSize > MAX_FILE_SIZE_BYTES) {
-      return NextResponse.json({ error: "Invalid file size" }, { status: 400 });
-    }
+  if (typeof body.fileSize !== "number" || body.fileSize <= 0 || body.fileSize > MAX_FILE_SIZE_BYTES) {
+    return NextResponse.json({ error: "Invalid file size" }, { status: 400 });
   }
 
   const samples = await getSamples(auth.userId);
@@ -98,6 +97,7 @@ export async function POST(req: NextRequest) {
   // Update the sample record with actual file names and S3 key
   const { updateSampleFiles } = await import("../store");
   await updateSampleFiles(auth.userId, sampleId, og, final, s3Key);
+  auditLog("sample.upload", auth.userId, { sampleId, label, provider: body.provider });
 
   return NextResponse.json({ sampleId, uploadUrl, expiresIn: 900 });
 }

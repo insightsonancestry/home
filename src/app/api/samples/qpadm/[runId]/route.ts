@@ -7,7 +7,7 @@ const s3 = new S3Client({ region: process.env.AWS_REGION || "us-east-1" });
 const BUCKET = process.env.S3_BUCKET_NAME || "ioa-reference-data";
 
 const RUN_ID_RE = /^[a-f0-9]{8}$/;
-const MAX_RUN_AGE_MS = 10 * 60 * 1000; // 10 min
+const MAX_RUN_AGE_MS = 15 * 60 * 1000; // 15 min — must exceed Lambda timeout (9.5min) + cold start + DDB write
 
 export async function GET(
   _req: NextRequest,

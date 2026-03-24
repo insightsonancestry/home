@@ -15,12 +15,14 @@ const CONVERT_SCRIPT = `${SCRIPTS_DIR}/convert_2_23andme.py`;
 const EXTRACT_SCRIPT = `${SCRIPTS_DIR}/extract_samples.py`;
 const MERGE_SCRIPT = `${SCRIPTS_DIR}/merge_raw.py`;
 const QPADM_SCRIPT = `${SCRIPTS_DIR}/run_qpadm.R`;
-const WORK_DIR = "/tmp/work";
+const WORK_DIR_BASE = "/tmp/work";
 const CACHE_DIR = "/tmp/cache";
+const USER_ID_RE = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 
 const PROVIDER_MAP = {
   ancestry: "ancestrydna",
   ftdna: "ftdna_new",
+  ftdna_old: "ftdna_old",
   myheritage: "myheritage",
   livingdna: "livingdna",
 };
@@ -48,9 +50,22 @@ async function uploadToS3(localPath, key) {
   await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: body }));
 }
 
-function cleanWorkDir() {
-  if (existsSync(WORK_DIR)) rmSync(WORK_DIR, { recursive: true, force: true });
-  mkdirSync(WORK_DIR, { recursive: true });
+function validateUserId(userId) {
+  if (!userId || !USER_ID_RE.test(userId)) {
+    throw new Error("Invalid userId format");
+  }
+}
+
+function getWorkDir(userId) {
+  validateUserId(userId);
+  return `${WORK_DIR_BASE}/${userId}`;
+}
+
+function cleanWorkDir(userId) {
+  const workDir = getWorkDir(userId);
+  if (existsSync(workDir)) rmSync(workDir, { recursive: true, force: true });
+  mkdirSync(workDir, { recursive: true });
+  return workDir;
 }
 
 async function updateStage(userId, runId, stage) {
@@ -80,15 +95,49 @@ async function checkCancelled(userId, runId) {
   }
 }
 
-async function completeRun(userId, runId, durationMs) {
+function parseResultMeta(text) {
+  const pMatch = text.match(/^p-value:\s*([\d.eE+-]+)/m);
+  const pValue = pMatch ? parseFloat(pMatch[1]) : null;
+
+  const weights = [];
+  for (const line of text.split("\n")) {
+    // matches: "source: Yamnaya 45.2% SE 2.3%" or "source: Yamnaya 45.2%"
+    const m = line.match(/^source:\s+(.+?)\s+([\d.-]+)%(?:\s+SE\s+([\d.-]+)%)?/);
+    if (m) {
+      const entry = { source: m[1], pct: parseFloat(m[2]) };
+      if (m[3] !== undefined) entry.se = parseFloat(m[3]);
+      weights.push(entry);
+    }
+  }
+
+  return { pValue, weights };
+}
+
+async function completeRun(userId, runId, durationMs, resultText) {
+  const { pValue, weights } = parseResultMeta(resultText);
+  const modelPass = pValue !== null ? pValue >= 0.05 : null;
+
   try {
+    const updates = ["#s = :status", "stage = :stage", "durationMs = :d", "resultText = :rt"];
+    const values = { ":status": "completed", ":stage": "complete", ":d": durationMs, ":running": "running", ":rt": resultText.slice(0, 10000) };
+
+    if (pValue !== null) {
+      updates.push("pValue = :pv", "modelPass = :mp");
+      values[":pv"] = pValue;
+      values[":mp"] = modelPass;
+    }
+    if (weights.length > 0) {
+      updates.push("weights = :wt");
+      values[":wt"] = weights;
+    }
+
     await ddb.send(new UpdateCommand({
       TableName: SAMPLES_TABLE,
       Key: { userId, sampleId: `run#${runId}` },
-      UpdateExpression: "SET #s = :status, stage = :stage, durationMs = :d",
+      UpdateExpression: `SET ${updates.join(", ")} REMOVE #ttl`,
       ConditionExpression: "#s = :running",
-      ExpressionAttributeNames: { "#s": "status" },
-      ExpressionAttributeValues: { ":status": "completed", ":stage": "complete", ":d": durationMs, ":running": "running" },
+      ExpressionAttributeNames: { "#s": "status", "#ttl": "ttl" },
+      ExpressionAttributeValues: values,
     }));
   } catch (err) {
     console.warn("Failed to complete run (may be cancelled):", err.message);
@@ -100,9 +149,9 @@ async function failRun(userId, runId, error, durationMs) {
     await ddb.send(new UpdateCommand({
       TableName: SAMPLES_TABLE,
       Key: { userId, sampleId: `run#${runId}` },
-      UpdateExpression: "SET #s = :status, #e = :err, durationMs = :d",
+      UpdateExpression: "SET #s = :status, #e = :err, durationMs = :d REMOVE #ttl",
       ConditionExpression: "#s = :running",
-      ExpressionAttributeNames: { "#s": "status", "#e": "error" },
+      ExpressionAttributeNames: { "#s": "status", "#e": "error", "#ttl": "ttl" },
       ExpressionAttributeValues: { ":status": "failed", ":err": error.slice(0, 500), ":d": durationMs, ":running": "running" },
     }));
   } catch (err) {
@@ -505,7 +554,12 @@ output <- c(output, "")
 output <- c(output, "===== WEIGHTS =====")
 w <- result$weights
 for (i in seq_len(nrow(w))) {
-  output <- c(output, sprintf("source: %s %.1f%%", w$left[i], w$weight[i] * 100))
+  se_val <- if ("se" %in% names(w)) w$se[i] * 100 else NA
+  if (!is.na(se_val)) {
+    output <- c(output, sprintf("source: %s %.1f%% SE %.1f%%", w$left[i], w$weight[i] * 100, se_val))
+  } else {
+    output <- c(output, sprintf("source: %s %.1f%%", w$left[i], w$weight[i] * 100))
+  }
 }
 
 if (!is.null(result$rankdrop)) {
@@ -589,12 +643,14 @@ export const handler = async (event) => {
   }
 
   writeInlineScripts();
-  cleanWorkDir();
+  const { userId } = event;
+  if (!userId) throw new Error("Missing userId");
+  const WORK_DIR = cleanWorkDir(userId);
 
   // === CONVERT: non-23andMe → 23andMe format ===
   if (action === "convert") {
-    const { userId, sampleId, provider } = event;
-    if (!userId || !sampleId || !provider) throw new Error("Missing fields");
+    const { sampleId, provider } = event;
+    if (!sampleId || !provider) throw new Error("Missing fields");
 
     if (provider === "23andme") {
       return { status: "skipped", reason: "23andMe format, no conversion needed" };
@@ -625,14 +681,14 @@ export const handler = async (event) => {
 
       return { status: "success", action: "convert" };
     } finally {
-      cleanWorkDir();
+      cleanWorkDir(userId);
     }
   }
 
   // === QPADM: extract + run qpAdm ===
   if (action === "qpadm") {
-    const { userId, dataset, sources, references, target, runId, userTarget, targetS3Key, individualSamples } = event;
-    if (!userId || !dataset || !sources || !references || !target || !runId) {
+    const { dataset, sources, references, target, runId, userTarget, targetS3Key, individualSamples } = event;
+    if (!dataset || !sources || !references || !target || !runId) {
       throw new Error("Missing fields for qpadm");
     }
 
@@ -771,7 +827,7 @@ export const handler = async (event) => {
       const resultText = readFileSync(outputPath, "utf-8");
       const durationMs = Date.now() - startTime;
 
-      await completeRun(userId, runId, durationMs);
+      await completeRun(userId, runId, durationMs, resultText);
       console.log(`qpAdm completed in ${(durationMs / 1000).toFixed(1)}s`);
 
       return {
@@ -786,7 +842,7 @@ export const handler = async (event) => {
       await failRun(userId, runId, err.message || "Unknown error", durationMs);
       throw err;
     } finally {
-      cleanWorkDir();
+      cleanWorkDir(userId);
     }
   }
 

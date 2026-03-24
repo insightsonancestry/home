@@ -5,6 +5,7 @@ import { validateEmail, sanitizeAuthError } from "@/lib/validation";
 import { safeJson } from "@/lib/auth-verify";
 import { decodeJwt } from "jose";
 import { createRateLimiter, getIpFromRequest } from "@/lib/rate-limit";
+import { auditLog } from "@/lib/audit";
 
 // 5 login attempts per minute per IP
 const loginLimiter = createRateLimiter({ name: "login", windowMs: 60_000, max: 5 });
@@ -38,6 +39,7 @@ export async function POST(request: Request) {
     });
 
     const payload = decodeJwt(tokens.IdToken!);
+    auditLog("auth.login.success", payload.sub as string, { email }, ip);
 
     return NextResponse.json({
       user: {
@@ -49,6 +51,7 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "";
+    auditLog("auth.login.fail", null, undefined, ip);
     return NextResponse.json({ error: sanitizeAuthError(msg) }, { status: 401 });
   }
 }

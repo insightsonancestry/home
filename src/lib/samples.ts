@@ -198,6 +198,78 @@ export async function fetchActiveRuns(): Promise<ActiveRun[]> {
   }
 }
 
+export interface HistoryRun {
+  runId: string;
+  createdAt: number;
+  status: string;
+  dataset: string;
+  sources: string[];
+  references: string[];
+  target: string;
+  userTarget?: boolean;
+  allsnps?: boolean;
+  durationMs?: number;
+  error?: string;
+  resultText?: string;
+  pValue?: number;
+  modelPass?: boolean;
+  weights?: { source: string; pct: number; se?: number }[];
+}
+
+export async function fetchRunHistory(): Promise<HistoryRun[]> {
+  try {
+    const res = await fetch("/api/samples/qpadm/history");
+    const data = await res.json();
+    if (!Array.isArray(data.runs)) return [];
+    return data.runs;
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchRunResultText(runId: string): Promise<string | null> {
+  try {
+    const res = await fetch(`/api/samples/qpadm/${encodeURIComponent(runId)}`);
+    const data = await res.json();
+    if (data.status === "completed" && data.result) return data.result;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function poolSamples(dataset: string, sampleIds: string[], newLabel: string): Promise<{ changed: number }> {
+  const res = await fetch("/api/samples/labels/edit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ operation: "pool", dataset, sampleIds, newLabel }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to pool samples");
+  return { changed: data.changed };
+}
+
+export async function renameLabel(dataset: string, oldLabel: string, newLabel: string): Promise<{ changed: number }> {
+  const res = await fetch("/api/samples/labels/edit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ operation: "rename", dataset, oldLabel, newLabel }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to rename label");
+  return { changed: data.changed };
+}
+
+export async function resetLabels(dataset: string): Promise<void> {
+  const res = await fetch("/api/samples/labels/edit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ operation: "reset", dataset }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to reset labels");
+}
+
 export async function fetchDatasetLabels(dataset: string): Promise<string[]> {
   const res = await fetch(`/api/samples/labels?dataset=${encodeURIComponent(dataset)}`);
   const data = await res.json();

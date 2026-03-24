@@ -8,6 +8,7 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 export function sanitizeFileName(name: string): string | null {
   // Strip path separators and dangerous characters
   const cleaned = name
+    .replace(/[\x00-\x1f]/g, "")  // strip control characters (null bytes, etc.)
     .replace(/[/\\:*?"<>|]/g, "")
     .replace(/\.\./g, "")
     .trim();

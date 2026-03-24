@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth-verify";
 import { getSamples, removeSample } from "../store";
 import { deleteObject } from "@/lib/s3";
 import { isValidSampleId } from "@/lib/sanitize";
+import { auditLog } from "@/lib/audit";
 
 export async function DELETE(
   _req: NextRequest,
@@ -47,6 +48,7 @@ export async function DELETE(
     await deleteObject(key).catch(() => {});
   }
 
+  auditLog("sample.delete", auth.userId, { sampleId });
   const remaining = await getSamples(auth.userId);
   return NextResponse.json({ success: true, sampleCount: remaining.length });
 }

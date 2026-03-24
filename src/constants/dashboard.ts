@@ -1,9 +1,10 @@
 export const PROVIDERS = [
-  { id: "23andme",    label: "23andMe",     accept: ".txt" },
-  { id: "ancestry",   label: "AncestryDNA", accept: ".txt" },
-  { id: "ftdna",      label: "FTDNA",       accept: ".csv" },
-  { id: "myheritage", label: "MyHeritage",  accept: ".csv" },
-  { id: "livingdna",  label: "LivingDNA",   accept: ".csv,.txt" },
+  { id: "23andme",    label: "23andMe",        accept: ".txt" },
+  { id: "ancestry",   label: "AncestryDNA",    accept: ".txt" },
+  { id: "ftdna",      label: "FTDNA",          accept: ".csv" },
+  { id: "ftdna_old",  label: "FTDNA (Legacy)", accept: ".csv" },
+  { id: "myheritage", label: "MyHeritage",     accept: ".csv" },
+  { id: "livingdna",  label: "LivingDNA",      accept: ".csv,.txt" },
 ];
 
 export interface Sample {
@@ -29,12 +30,26 @@ export const AADR_DATASETS = [
 export const PIE_COLORS = [
   "#53bde3", "#f472b6", "#facc15", "#34d399", "#a78bfa",
   "#fb923c", "#f87171", "#2dd4bf", "#a3e635", "#818cf8",
+  "#e879f9", "#38bdf8", "#fbbf24", "#4ade80", "#c084fc",
+  "#fb7185", "#22d3ee", "#a3e635", "#f97316", "#60a5fa",
 ];
 
-export const PIE_COLORS_HEX = [
-  "#53bde3", "#f472b6", "#facc15", "#34d399", "#a78bfa",
-  "#fb923c", "#f87171", "#2dd4bf", "#a3e635", "#818cf8",
-];
+export const PIE_COLORS_HEX = PIE_COLORS;
+
+/** Deterministic shuffle based on a seed string — same seed = same order */
+export function shuffledColors(seed: string): string[] {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+  }
+  const arr = [...PIE_COLORS];
+  for (let i = arr.length - 1; i > 0; i--) {
+    h = ((h << 5) - h + i) | 0;
+    const j = ((h >>> 0) % (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
 export const NAV_ITEMS = [
   { id: "samples",   label: "Samples/Labels" },
@@ -51,7 +66,7 @@ export const DATASETS = [
 ];
 
 export const LABEL_OPERATIONS = [
-  { id: "replace",       label: "Replace Labels" },
-  { id: "edit_single",   label: "Edit Single Label" },
-  { id: "edit_multiple", label: "Edit Multiple Labels" },
+  { id: "pool",   label: "Pool Samples" },
+  { id: "rename", label: "Change Label" },
+  { id: "reset",  label: "Reset to Default" },
 ];

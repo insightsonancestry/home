@@ -48,9 +48,16 @@ plink.snplist
 out.txt
 tes.log
 
-# scratch docs
+# scratch docs / plans
 upload.md
 qpadm-plan.md
+PLAN.md
+PLAN_user_target.md
+PRODUCTION_FIXES.md
+ARCHITECTURE.md
+
+# CDK output
+infra/cdk.out/
 
 # Claude Code local config
 .claude/

@@ -51,12 +51,18 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 export async function middleware(request: NextRequest) {
+  const requestId = request.headers.get("x-request-id") || crypto.randomUUID();
   const { pathname } = request.nextUrl;
 
-  // CSRF: reject mutation requests from unknown origins
+  // CSRF: reject mutation requests without valid origin or custom header
   if (pathname.startsWith("/api/") && request.method !== "GET") {
     const origin = request.headers.get("origin");
+    const hasCustomHeader = request.headers.get("content-type")?.includes("application/json");
     if (origin && !ALLOWED_ORIGINS.has(origin)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    // When origin is absent, require Content-Type: application/json (which simple forms cannot send)
+    if (!origin && !hasCustomHeader) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   }
@@ -96,7 +102,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return addSecurityHeaders(NextResponse.next());
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-request-id", requestId);
+  const response = addSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
+  response.headers.set("x-request-id", requestId);
+  return response;
 }
 
 export const config = {

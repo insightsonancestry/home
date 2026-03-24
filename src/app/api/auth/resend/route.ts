@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { serverResendCode } from "@/lib/cognito-server";
-import { sanitizeAuthError } from "@/lib/validation";
+import { validateEmail, sanitizeAuthError } from "@/lib/validation";
 import { safeJson } from "@/lib/auth-verify";
 import { createRateLimiter, getIpFromRequest } from "@/lib/rate-limit";
 
@@ -21,7 +21,8 @@ export async function POST(request: Request) {
     const body = await safeJson<{ email: string }>(request);
     if (!body) return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     const { email } = body;
-    if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
+    const emailErr = validateEmail(email);
+    if (emailErr) return NextResponse.json({ error: emailErr }, { status: 400 });
     await serverResendCode(email);
     return NextResponse.json({ success: true });
   } catch (err) {

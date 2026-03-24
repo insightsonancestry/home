@@ -6,13 +6,14 @@ import { randomUUID } from "crypto";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { getActiveRunCount, registerRun, failRunRecord } from "./run-tracker";
 import { getSamples } from "../store";
+import { auditLog } from "@/lib/audit";
 
 const lambda = new LambdaClient({ region: process.env.AWS_REGION || "us-east-1" });
 const PROCESSING_FN = process.env.PROCESSING_FUNCTION_NAME || "ioa-processing";
 
 const MAX_SOURCES = 10;
 const MAX_REFERENCES = 15;
-const MAX_CONCURRENT_RUNS = 2;
+const MAX_CONCURRENT_RUNS = 1;
 
 const qpadmLimiter = createRateLimiter({ name: "qpadm", windowMs: 600_000, max: 10 });
 
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
 
   const runId = randomUUID().slice(0, 8);
 
-  await registerRun(auth.userId, runId, { dataset, sources, references, target, userTarget: !!userTarget, allsnps: allsnps !== false });
+  await registerRun(auth.userId, runId, { dataset, sources, references, target, userTarget: !!userTarget, allsnps: !!allsnps });
 
   try {
     await lambda.send(new InvokeCommand({
@@ -143,12 +144,13 @@ export async function POST(req: NextRequest) {
         target,
         runId,
         userTarget: !!userTarget,
-        allsnps: allsnps !== false,
+        allsnps: !!allsnps,
         ...(targetS3Key && { targetS3Key }),
         ...(individualSamples && { individualSamples }),
       }),
     }));
 
+    auditLog("qpadm.start", auth.userId, { runId, dataset, target, sourcesCount: sources.length, refsCount: references.length });
     return NextResponse.json({ runId, status: "running" });
   } catch (err) {
     console.error("qpAdm submission error:", err);

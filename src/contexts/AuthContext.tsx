@@ -126,6 +126,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try { msg = JSON.parse(text).error || msg; } catch {}
       throw new Error(msg);
     }
+    // Clear stale DIY state from previous sessions
+    const diyKeys = ["diy-output", "diy-error", "diy-refs", "diy-dataset", "diy-sources", "diy-references", "diy-target", "diy-allsnps", "diy-individual-selection", "diy-individual-samples", "diy-sample-totals", "diy-active-run"];
+    diyKeys.forEach((k) => sessionStorage.removeItem(k));
+
     const data = await res.json();
     setUser(data.user);
   }, []);

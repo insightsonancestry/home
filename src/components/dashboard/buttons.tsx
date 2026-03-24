@@ -12,7 +12,7 @@ export function PillButton({ active, onClick, children }: { active: boolean; onC
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="px-3 py-1.5 text-xs uppercase tracking-[1px] border rounded-sm transition-all duration-200"
+      className="px-3 py-1.5 text-xs uppercase tracking-[2px] border rounded-sm transition-all duration-200"
       style={{
         borderColor: isHighlight ? "var(--accent)" : "var(--border-strong)",
         color: isHighlight ? "var(--accent)" : "var(--text-muted)",
@@ -88,7 +88,7 @@ export function DownloadButton({ onClick, children, disabled }: { onClick: () =>
       disabled={disabled}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex items-center gap-2 px-3 py-2 text-xs uppercase tracking-[1px] border rounded-sm transition-all duration-200"
+      className="flex items-center gap-2 px-3 py-2 text-xs uppercase tracking-[2px] border rounded-sm transition-all duration-200"
       style={{
         borderColor: disabled ? "var(--border)" : isHover ? "var(--accent)" : "var(--border-strong)",
         color: disabled ? "var(--text-faint)" : isHover ? "var(--accent)" : "var(--text-muted)",
@@ -133,7 +133,7 @@ export function OperationButton({ active, onClick, children }: { active: boolean
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="w-full flex items-center gap-3 px-3 py-2.5 text-xs uppercase tracking-[1px] text-left border rounded-sm transition-all duration-200"
+      className="w-full flex items-center gap-3 px-3 py-2.5 text-xs uppercase tracking-[2px] text-left border rounded-sm transition-all duration-200"
       style={{
         borderColor: isHighlight ? "var(--accent)" : "var(--border-strong)",
         color: isHighlight ? "var(--accent)" : "var(--text-muted)",

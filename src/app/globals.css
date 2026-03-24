@@ -87,6 +87,34 @@ html {
   animation: subtle-pulse 4s ease-in-out infinite;
 }
 
+/* ── Custom Scrollbar ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--accent-rgb), 0.25) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--accent-rgb), 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-rgb), 0.4);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* ── Panel / Card ── */
 .panel {
   background: var(--panel);

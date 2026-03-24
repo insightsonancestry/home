@@ -3,6 +3,7 @@ import { serverSignUp } from "@/lib/cognito-server";
 import { validateEmail, validatePassword, validateName, validateCountry, sanitize, sanitizeAuthError } from "@/lib/validation";
 import { safeJson } from "@/lib/auth-verify";
 import { createRateLimiter, getIpFromRequest } from "@/lib/rate-limit";
+import { auditLog } from "@/lib/audit";
 
 // 3 signup attempts per minute per IP
 const signupLimiter = createRateLimiter({ name: "signup", windowMs: 60_000, max: 3 });
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
       country: sanitize(country),
     });
 
+    auditLog("auth.signup", null, { email }, ip);
     return NextResponse.json({ success: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "";

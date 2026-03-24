@@ -79,9 +79,17 @@ export function createRateLimiter(config: RateLimiterConfig): RateLimiter {
 }
 
 export function getIpFromRequest(req: Request): string {
-  const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-  const real = req.headers.get("x-real-ip");
-  if (real) return real;
+  // x-real-ip: set by Vercel/trusted proxies to the actual client IP (not spoofable)
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
+  // Fallback: rightmost entry in x-vercel-forwarded-for (platform-appended, trustworthy)
+  const vercelForwarded = req.headers.get("x-vercel-forwarded-for");
+  if (vercelForwarded) {
+    const parts = vercelForwarded.split(",");
+    return parts[parts.length - 1].trim();
+  }
+
+  // "unknown" is fail-closed — all unknowns share one rate-limit bucket
   return "unknown";
 }

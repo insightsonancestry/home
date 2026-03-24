@@ -8,8 +8,6 @@ import { PillButton, ActionButton } from "./buttons";
 import { SearchableSelect } from "./SearchableSelect";
 import { AADR_DATASETS } from "@/constants/dashboard";
 import { fetchDatasetLabels, fetchLabelSamples } from "@/lib/samples";
-import { useSessionState } from "@/hooks/useSessionState";
-
 import type { RestoredConfig } from "./DIYModelingSection";
 
 type PickerContext = "sources" | "references" | "target" | null;
@@ -21,17 +19,17 @@ export function ConfigureModelBox({ onRun, onTerminate, isRunning, sampleLabels,
   sampleLabels: string[];
   restoredConfig?: RestoredConfig | null;
 }) {
-  const [dataset, setDataset] = useSessionState<string>("diy-dataset", "");
+  const [dataset, setDataset] = useState("");
   const [labels, setLabels] = useState<string[]>([]);
   const [loadingLabels, setLoadingLabels] = useState(false);
   const [labelsError, setLabelsError] = useState("");
-  const [sources, setSources] = useSessionState<string[]>("diy-sources", []);
-  const [references, setReferences] = useSessionState<string[]>("diy-references", []);
-  const [target, setTarget] = useSessionState<string[]>("diy-target", []);
-  const [allsnps, setAllsnps] = useSessionState("diy-allsnps", false);
-  const [individualSelection, setIndividualSelection] = useSessionState("diy-individual-selection", false);
-  const [individualSamples, setIndividualSamples] = useSessionState<Record<string, string[]>>("diy-individual-samples", {});
-  const [sampleTotals, setSampleTotals] = useSessionState<Record<string, number>>("diy-sample-totals", {});
+  const [sources, setSources] = useState<string[]>([]);
+  const [references, setReferences] = useState<string[]>([]);
+  const [target, setTarget] = useState<string[]>([]);
+  const [allsnps, setAllsnps] = useState(false);
+  const [individualSelection, setIndividualSelection] = useState(false);
+  const [individualSamples, setIndividualSamples] = useState<Record<string, string[]>>({});
+  const [sampleTotals, setSampleTotals] = useState<Record<string, number>>({});
   const labelCacheRef = useRef<Record<string, string[]>>({});
 
   // Sample picker state
@@ -239,13 +237,31 @@ export function ConfigureModelBox({ onRun, onTerminate, isRunning, sampleLabels,
       className="border rounded-sm overflow-hidden"
       style={{ borderColor: "var(--accent)", background: "var(--panel)" }}
     >
-      <div className="px-3 py-2 border-b flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
-        <span className="text-[10px] uppercase tracking-[1.5px] font-medium" style={{ color: "var(--accent)" }}>
+      <div className="px-3 py-2 border-b flex items-center justify-between gap-2" style={{ borderColor: "var(--border)" }}>
+        <span className="text-[10px] uppercase tracking-[2px] font-medium truncate min-w-0" style={{ color: "var(--accent)" }}>
           {pickerLabel}
         </span>
-        <PillButton active={false} onClick={closePicker}>
-          Cancel
-        </PillButton>
+        <div className="flex items-center gap-2 shrink-0">
+          {!pickerLoading && pickerSamples.length > 0 && (
+            <motion.button
+              onClick={() => setPickerSelected(
+                pickerSelected.length === pickerSamples.length ? [] : [...pickerSamples]
+              )}
+              className="text-xs uppercase tracking-[2px] px-3 py-1.5 rounded-sm border font-bold"
+              animate={{
+                color: pickerSelected.length === pickerSamples.length ? "#f87171" : "#53bde3",
+                borderColor: pickerSelected.length === pickerSamples.length ? "rgba(248,113,113,0.3)" : "rgba(83,189,227,0.3)",
+                background: pickerSelected.length === pickerSamples.length ? "rgba(248,113,113,0.08)" : "rgba(83,189,227,0.08)",
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {pickerSelected.length === pickerSamples.length ? "Deselect all" : "Select all"}
+            </motion.button>
+          )}
+          <PillButton active={false} onClick={closePicker}>
+            Cancel
+          </PillButton>
+        </div>
       </div>
 
       {pickerLoading ? (
@@ -255,14 +271,14 @@ export function ConfigureModelBox({ onRun, onTerminate, isRunning, sampleLabels,
         </div>
       ) : (
         <>
-          <div className="max-h-36 overflow-y-auto px-1 py-1.5">
+          <div className="max-h-48 overflow-y-auto px-1.5 py-1.5 flex flex-col gap-0.5">
             {pickerSamples.map((sampleId) => {
               const checked = pickerSelected.includes(sampleId);
               return (
                 <button
                   key={sampleId}
                   onClick={() => togglePickerSample(sampleId)}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-sm text-xs transition-colors duration-100"
+                  className="w-full flex items-center gap-2 px-3 py-4 sm:py-2 rounded-sm text-xs transition-colors duration-100"
                   style={{
                     color: checked ? "var(--text-primary)" : "var(--text-faint)",
                     background: checked ? "var(--accent-subtle)" : "transparent",
@@ -286,26 +302,16 @@ export function ConfigureModelBox({ onRun, onTerminate, isRunning, sampleLabels,
               );
             })}
           </div>
-          <div className="px-3 py-2 border-t flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
+          <div className="px-3 py-2.5 border-t flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
             <span className="text-[10px]" style={{ color: "var(--text-faint)" }}>
               {pickerSelected.length}/{pickerSamples.length} selected
             </span>
-            <div className="flex gap-2">
-              <PillButton
-                active={false}
-                onClick={() => setPickerSelected(
-                  pickerSelected.length === pickerSamples.length ? [] : [...pickerSamples]
-                )}
-              >
-                {pickerSelected.length === pickerSamples.length ? "None" : "All"}
-              </PillButton>
-              <PillButton
-                active={pickerSelected.length > 0}
-                onClick={() => { if (pickerSelected.length > 0) confirmPicker(); }}
-              >
-                Confirm
-              </PillButton>
-            </div>
+            <PillButton
+              active={pickerSelected.length > 0}
+              onClick={() => { if (pickerSelected.length > 0) confirmPicker(); }}
+            >
+              Confirm
+            </PillButton>
           </div>
         </>
       )}

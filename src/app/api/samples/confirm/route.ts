@@ -24,6 +24,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Sample not found" }, { status: 404 });
   }
 
+  if (sample.status !== "uploading") {
+    return NextResponse.json({ error: "Sample already processed" }, { status: 400 });
+  }
+
   if (sample.s3Key) {
     const head = await headObject(sample.s3Key);
     if (!head) {
@@ -71,7 +75,7 @@ export async function POST(req: NextRequest) {
       id: sample.id,
       label: sample.label,
       provider: sample.provider,
-      status: "processing" as const,
+      status: sample.provider === "23andme" ? "ready" as const : "processing" as const,
       uploadedAt: sample.uploadedAt,
       fileSize: sample.fileSize,
     },

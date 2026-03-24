@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, safeJson } from "@/lib/auth-verify";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { auditLog } from "@/lib/audit";
 
 const client = DynamoDBDocumentClient.from(
   new DynamoDBClient({ region: process.env.AWS_REGION || "us-east-1" }),
@@ -23,11 +24,12 @@ export async function POST(req: NextRequest) {
     await client.send(new UpdateCommand({
       TableName: TABLE,
       Key: { userId: auth.userId, sampleId: `run#${body.runId}` },
-      UpdateExpression: "SET #s = :status",
+      UpdateExpression: "SET #s = :status REMOVE #ttl",
       ConditionExpression: "#s = :running",
-      ExpressionAttributeNames: { "#s": "status" },
+      ExpressionAttributeNames: { "#s": "status", "#ttl": "ttl" },
       ExpressionAttributeValues: { ":status": "cancelled", ":running": "running" },
     }));
+    auditLog("qpadm.cancel", auth.userId, { runId: body.runId });
     return NextResponse.json({ status: "cancelled" });
   } catch (err: unknown) {
     const code = (err as { name?: string }).name;

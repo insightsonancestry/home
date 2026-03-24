@@ -36,12 +36,7 @@ export class StorageStack extends cdk.Stack {
       ],
     });
 
-    // Upload size limit (50 MB) is enforced via presigned URL conditions
-    // in the presign API route, not via bucket policy.
-
-    // Bucket structure:
-    // v62_1240K/          — 1240K reference dataset
-    // v62_HO/             — HO reference dataset
-    // {userId}/rawfiles/  — user uploaded raw files (max 3 per user)
+    // Upload size (50 MB) is enforced via presigned URL ContentLength signature
+    // in src/lib/s3.ts. S3 bucket policies don't support content-length conditions.
   }
 }

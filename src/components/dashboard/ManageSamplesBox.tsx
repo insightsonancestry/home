@@ -53,10 +53,10 @@ function DeleteConfirmModal({ sample, onConfirm, onCancel }: {
         onClick={(e) => e.stopPropagation()}
       >
         <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-bright)" }}>
-          Delete sample
+          Confirm deletion
         </p>
         <p className="text-xs mt-3 leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          Do you really want to delete the sample <span style={{ color: "var(--text-bright)" }}>&quot;{sample.label}&quot;</span> (<span style={{ color: "var(--text-bright)" }}>&quot;{sample.id}&quot;</span>)?
+          This will permanently remove <span className="font-semibold" style={{ color: "var(--text-bright)" }}>{sample.label}</span> and its associated files. This action cannot be undone.
         </p>
         <div className="flex gap-3 mt-5">
           <ActionButton variant="muted" onClick={onCancel}>Cancel</ActionButton>
@@ -110,14 +110,14 @@ function SampleRow({ sample, onDelete }: { sample: Sample; onDelete: (id: string
             boxShadow: sample.status === "ready" ? "var(--accent-dot)" : "none",
           }}
         />
-        <div className="min-w-0">
-          <p className="text-xs font-semibold truncate" title={sample.label} style={{ color: "var(--text-bright)" }}>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-semibold truncate" style={{ color: "var(--text-bright)" }}>
             {sample.label}
-          </p>
-          <p className="text-[10px] mt-0.5 truncate" title={`${sample.id} · ${provider?.label || sample.provider}${fileSizeLabel ? ` · ${fileSizeLabel}` : ""}`} style={{ color: "var(--text-faint)" }}>
-            {sample.id} · {provider?.label || sample.provider}
+          </span>
+          <span className="text-[10px] shrink-0" style={{ color: "var(--text-faint)" }}>
+            {provider?.label || sample.provider}
             {fileSizeLabel && ` · ${fileSizeLabel}`}
-          </p>
+          </span>
         </div>
       </div>
 
@@ -286,7 +286,6 @@ export function ManageSamplesBox({ samples, loading, onUploadComplete, onDelete 
                   {samples.map((sample) => (
                     <motion.div
                       key={sample.id}
-                      layout
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
@@ -397,7 +396,7 @@ export function ManageSamplesBox({ samples, loading, onUploadComplete, onDelete 
             {uploading && (
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-[1px]" style={{ color: "var(--text-muted)" }}>Uploading</span>
+                  <span className="text-xs uppercase tracking-[2px]" style={{ color: "var(--text-muted)" }}>Uploading</span>
                   <span className="text-xs font-medium" style={{ color: "var(--accent)" }}>{uploadProgress}%</span>
                 </div>
                 <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>

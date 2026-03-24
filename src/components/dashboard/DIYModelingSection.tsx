@@ -5,8 +5,6 @@ import { SectionHeader } from "./SectionHeader";
 import { ConfigureModelBox } from "./ConfigureModelBox";
 import { ModelOutputBox } from "./ModelOutputBox";
 import { submitQpadm, pollUntilDone, fetchActiveRuns, cancelRun } from "@/lib/samples";
-import { useSessionState } from "@/hooks/useSessionState";
-
 const ACTIVE_RUN_KEY = "diy-active-run";
 
 export interface RestoredConfig {
@@ -18,9 +16,9 @@ export interface RestoredConfig {
 
 export function DIYModelingSection({ sampleLabels }: { sampleLabels: string[] }) {
   const [isRunning, setIsRunning] = useState(false);
-  const [output, setOutput] = useSessionState("diy-output", "");
-  const [error, setError] = useSessionState("diy-error", "");
-  const [lastReferences, setLastReferences] = useSessionState<string[]>("diy-refs", []);
+  const [output, setOutput] = useState("");
+  const [error, setError] = useState("");
+  const [lastReferences, setLastReferences] = useState<string[]>([]);
   const [stage, setStage] = useState<string | undefined>(undefined);
   const [durationMs, setDurationMs] = useState<number | undefined>(undefined);
   const [isUserTarget, setIsUserTarget] = useState(false);
@@ -95,7 +93,11 @@ export function DIYModelingSection({ sampleLabels }: { sampleLabels: string[] })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const submittingRef = useRef(false);
+
   const handleRun = async (dataset: string, sources: string[], references: string[], target: string, userTarget?: boolean, allsnps?: boolean, individualSamples?: Record<string, string[]>) => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsRunning(true);
     setOutput("");
     setError("");
@@ -122,6 +124,7 @@ export function DIYModelingSection({ sampleLabels }: { sampleLabels: string[] })
       sessionStorage.removeItem(ACTIVE_RUN_KEY);
     } finally {
       abortRef.current = null;
+      submittingRef.current = false;
       setIsRunning(false);
     }
   };
@@ -136,6 +139,7 @@ export function DIYModelingSection({ sampleLabels }: { sampleLabels: string[] })
       abortRef.current.abort();
       abortRef.current = null;
     }
+    submittingRef.current = false;
     setIsRunning(false);
     setActiveRunId(null);
     setOutput("");

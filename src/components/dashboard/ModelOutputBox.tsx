@@ -8,7 +8,7 @@ import logoImage from "@/assets/images/insightsonancestry-logo_test.png";
 import { GlowCard } from "@/components/GlowCard";
 import { BoxHeader } from "./BoxHeader";
 import { ActionButton, DownloadButton } from "./buttons";
-import { PIE_COLORS_HEX } from "@/constants/dashboard";
+import { shuffledColors } from "@/constants/dashboard";
 
 interface BarSegment {
   label: string;
@@ -35,11 +35,12 @@ function parseOutput(output: string) {
   return { segments, targetName, pValue };
 }
 
-function buildBars(segments: { label: string; pct: number }[]): BarSegment[] {
+function buildBars(segments: { label: string; pct: number }[], seed: string): BarSegment[] {
+  const colors = shuffledColors(seed);
   return segments.map((s, i) => ({
     label: s.label,
     pct: s.pct,
-    colorHex: PIE_COLORS_HEX[i % PIE_COLORS_HEX.length],
+    colorHex: colors[i % colors.length],
   }));
 }
 
@@ -81,7 +82,7 @@ export function ModelOutputBox({ output, error, isRunning, references, stage, du
   const chartRef = useRef<HTMLDivElement>(null);
 
   const { segments, targetName, pValue } = output ? parseOutput(output) : { segments: [], targetName: "", pValue: "" };
-  const bars = buildBars(segments);
+  const bars = buildBars(segments, targetName);
   const maxPct = 100;
 
   const downloadChart = useCallback(async () => {
@@ -112,7 +113,7 @@ export function ModelOutputBox({ output, error, isRunning, references, stage, du
             <span className="ml-auto text-[9px] uppercase tracking-[2px]" style={{ color: "var(--text-faint)" }}>terminal</span>
           </div>
           <div
-            className="p-3 sm:p-4 min-h-[80px] font-mono text-xs leading-relaxed flex flex-col gap-1"
+            className="p-3 sm:p-4 min-h-[80px] font-mono text-[13px] leading-relaxed flex flex-col gap-1"
             style={{ background: "var(--bg)" }}
           >
             {error ? (
@@ -164,39 +165,38 @@ export function ModelOutputBox({ output, error, isRunning, references, stage, du
           <div
             ref={chartRef}
             className="relative rounded-sm overflow-hidden flex flex-col"
-            style={{ background: "#000000", aspectRatio: "3 / 4" }}
+            style={{ background: "#000000" }}
           >
             {/* Header */}
-            <div className="px-7 sm:px-9 pt-7 sm:pt-9 pb-5 sm:pb-6">
+            <div className="px-4 sm:px-9 pt-5 sm:pt-9 pb-3 sm:pb-6">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] tracking-[3px] font-bold" style={{ color: "rgba(255,255,255,0.3)" }}>qpAdm</span>
+                <span className="text-[10px] sm:text-[11px] tracking-[3px] font-bold" style={{ color: "rgba(255,255,255,0.3)" }}>qpAdm</span>
                 <span
-                  className="text-[10px] tracking-[2px] px-3 py-1 rounded-sm border"
+                  className="text-[9px] sm:text-[10px] tracking-[2px] px-2 sm:px-3 py-0.5 sm:py-1 rounded-sm border"
                   style={{ borderColor: "rgba(83,189,227,0.25)", color: "rgba(255,255,255,0.5)", background: "rgba(83,189,227,0.08)" }}
                 >
                   p = {pValue}
                 </span>
               </div>
-              <div className="flex items-center justify-center gap-2.5 mt-5 sm:mt-6">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#53bde3", boxShadow: "0 0 10px #53bde3" }} />
-                <span className="text-lg sm:text-xl font-bold uppercase tracking-[5px]" style={{ color: "#ffffff" }}>
+              <div className="flex items-center justify-center mt-3 sm:mt-6">
+                <span className="text-base sm:text-xl font-bold tracking-[2px] sm:tracking-[3px]" style={{ color: "#ffffff" }}>
                   {targetName}
                 </span>
               </div>
             </div>
 
-            <div className="mx-7 sm:mx-9 h-px" style={{ background: "rgba(83,189,227,0.12)" }} />
+            <div className="mx-4 sm:mx-9 h-px" style={{ background: "rgba(83,189,227,0.12)" }} />
 
             {/* Sources */}
-            <div className="px-7 sm:px-9 pt-6 sm:pt-7 pb-4">
-              <div className="flex items-center justify-between mb-5 sm:mb-6">
-                <p className="text-[9px] uppercase tracking-[2px] font-bold" style={{ color: "rgba(255,255,255,0.3)" }}>Sources</p>
-                <p className="text-[9px] uppercase tracking-[2px] tabular-nums" style={{ color: "rgba(255,255,255,0.3)" }}>
+            <div className="px-4 sm:px-9 pt-4 sm:pt-7 pb-3 sm:pb-4">
+              <div className="flex items-center justify-between mb-3 sm:mb-6">
+                <p className="text-[8px] sm:text-[9px] uppercase tracking-[2px] font-bold" style={{ color: "rgba(255,255,255,0.3)" }}>Sources</p>
+                <p className="text-[8px] sm:text-[9px] uppercase tracking-[2px] tabular-nums" style={{ color: "rgba(255,255,255,0.3)" }}>
                   {segments.length} source{segments.length !== 1 ? "s" : ""}
                 </p>
               </div>
 
-              <div className="flex flex-col gap-5 sm:gap-6">
+              <div className="flex flex-col gap-3 sm:gap-6">
                 {bars.map((bar, i) => (
                   <motion.div
                     key={bar.label}
@@ -204,23 +204,23 @@ export function ModelOutputBox({ output, error, isRunning, references, stage, du
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: i * 0.06, ease: "easeOut" }}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center justify-between mb-1 sm:mb-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         <span
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0"
                           style={{ background: bar.colorHex, boxShadow: `0 0 6px ${bar.colorHex}50` }}
                         />
-                        <span className="text-sm truncate" style={{ color: "rgba(255,255,255,0.85)" }}>
+                        <span className="text-xs sm:text-sm truncate" style={{ color: "rgba(255,255,255,0.85)" }}>
                           {bar.label}
                         </span>
                       </div>
-                      <span className="text-sm tabular-nums font-bold shrink-0 pl-3" style={{ color: bar.colorHex }}>
+                      <span className="text-xs sm:text-sm tabular-nums font-bold shrink-0 pl-3" style={{ color: bar.colorHex }}>
                         {bar.pct}%
                       </span>
                     </div>
 
                     <div
-                      className="relative h-[20px] rounded overflow-hidden"
+                      className="relative h-[14px] sm:h-[20px] rounded overflow-hidden"
                       style={{ background: `${bar.colorHex}0c` }}
                     >
                       <motion.div
@@ -248,13 +248,13 @@ export function ModelOutputBox({ output, error, isRunning, references, stage, du
 
             {/* Refs */}
             {references.length > 0 && (
-              <div className="px-7 sm:px-9 pt-2 pb-1">
-                <p className="text-[9px] uppercase tracking-[2px] font-bold mb-1.5" style={{ color: "rgba(255,255,255,0.3)" }}>Refs</p>
+              <div className="px-4 sm:px-9 pt-2 pb-1">
+                <p className="text-[8px] sm:text-[9px] uppercase tracking-[2px] font-bold mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>Refs</p>
                 <div className="flex items-start gap-1 flex-wrap">
                   {references.map((ref) => (
                     <span
                       key={ref}
-                      className="text-[7px] px-1 py-px rounded-sm leading-tight"
+                      className="text-[6px] sm:text-[7px] px-1 py-px rounded-sm leading-tight"
                       style={{ color: "rgba(255,255,255,0.25)", background: "rgba(83,189,227,0.06)" }}
                     >
                       {ref}
@@ -264,16 +264,12 @@ export function ModelOutputBox({ output, error, isRunning, references, stage, du
               </div>
             )}
 
-            {/* Spacer */}
-            <div className="flex-1" />
-
             {/* Footer */}
-            <div className="px-7 sm:px-9 pt-3 pb-6 sm:pb-7">
-              <div className="flex items-center justify-end gap-2">
-                <span className="text-[9px] tracking-[1px]" style={{ color: "rgba(255,255,255,0.3)" }}>powered by</span>
-                <Image src={logoImage} alt="IoA" width={16} height={16} className="opacity-50" draggable="false" />
-                <span className="text-[10px] tracking-[2px] font-bold uppercase" style={{ color: "rgba(83,189,227,0.5)" }}>
-                  Insights on Ancestry
+            <div className="px-4 sm:px-9 pt-3 pb-4 sm:pb-7">
+              <div className="flex items-center justify-end gap-1.5">
+                <Image src={logoImage} alt="IoA" width={14} height={14} className="opacity-50" draggable="false" />
+                <span className="text-[9px] tracking-[2px] font-bold uppercase" style={{ color: "rgba(83,189,227,0.5)" }}>
+                  IoA
                 </span>
               </div>
             </div>

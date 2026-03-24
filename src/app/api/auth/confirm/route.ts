@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     const { email, code } = body;
 
-    if (!email || typeof code !== "string" || code.length !== 6) {
+    if (!email || typeof code !== "string" || !/^\d{6}$/.test(code)) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 

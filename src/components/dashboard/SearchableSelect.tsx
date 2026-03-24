@@ -55,14 +55,13 @@ export function SearchableSelect({ label, options, selected, onChange, multi = t
       onLabelClick(item);
       setQuery("");
       setHoveredIdx(-1);
-      requestAnimationFrame(() => inputRef.current?.focus());
+      setOpen(false);
       return;
     }
     onChange(multi ? [...selected, item] : [item]);
     setQuery("");
     setHoveredIdx(-1);
-    if (!multi) setOpen(false);
-    if (multi) requestAnimationFrame(() => inputRef.current?.focus());
+    setOpen(false);
   };
 
   const handleRemove = (item: string) => {
@@ -129,14 +128,14 @@ export function SearchableSelect({ label, options, selected, onChange, multi = t
           {multi && selected.map((s) => (
             <span
               key={s}
-              className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-[1px] border rounded-sm shrink-0"
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-[2px] border rounded-sm max-w-full"
               style={{
                 borderColor: "var(--accent)",
                 color: "var(--accent)",
                 background: "var(--accent-subtle)",
               }}
             >
-              {renderPill ? renderPill(s) : s}
+              <span className="truncate">{renderPill ? renderPill(s) : s}</span>
               <button
                 onClick={(e) => { e.stopPropagation(); handleRemove(s); }}
                 className="ml-0.5 hover:opacity-70 transition-opacity"
