@@ -36,14 +36,15 @@ export async function DELETE(
     if (!filesToDelete.includes(key)) filesToDelete.push(key);
   }
 
-  for (const key of filesToDelete) {
-    await deleteObject(key).catch(() => {});
-  }
-
+  // Delete DB record first — orphaned S3 files are cheaper than orphaned records
   try {
     await removeSample(auth.userId, sampleId);
   } catch {
     return NextResponse.json({ error: "Failed to delete sample" }, { status: 500 });
+  }
+
+  for (const key of filesToDelete) {
+    await deleteObject(key).catch(() => {});
   }
 
   const remaining = await getSamples(auth.userId);

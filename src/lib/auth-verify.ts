@@ -1,4 +1,4 @@
-import { jwtVerify, createRemoteJWKSet } from "jose";
+import { jwtVerify, createRemoteJWKSet, type JWTPayload } from "jose";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -12,21 +12,25 @@ function getJwks() {
   return jwks;
 }
 
-export async function verifyAuthToken(token: string): Promise<string | null> {
+export async function verifyIdToken(token: string): Promise<JWTPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getJwks(), {
       issuer: ISSUER,
       audience: CLIENT_ID,
     });
-
     if (payload.token_use !== "id") return null;
-
-    const userId = payload.sub;
-    if (!userId || typeof userId !== "string") return null;
-    return userId;
+    return payload;
   } catch {
     return null;
   }
+}
+
+export async function verifyAuthToken(token: string): Promise<string | null> {
+  const payload = await verifyIdToken(token);
+  if (!payload) return null;
+  const userId = payload.sub;
+  if (!userId || typeof userId !== "string") return null;
+  return userId;
 }
 
 /**

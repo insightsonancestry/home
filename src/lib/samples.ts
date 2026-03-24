@@ -15,6 +15,7 @@ export async function presignUpload(body: {
   label: string;
   provider: string;
   fileName: string;
+  fileSize?: number;
 }): Promise<PresignResponse> {
   const res = await fetch("/api/samples/presign", {
     method: "POST",
@@ -51,6 +52,8 @@ export function uploadToS3(
 
     xhr.addEventListener("error", () => reject(new Error("S3 upload failed")));
     xhr.addEventListener("timeout", () => reject(new Error("Upload timed out")));
+    xhr.addEventListener("abort", () => reject(new Error("Upload aborted")));
+    xhr.setRequestHeader("Content-Type", "text/plain");
     xhr.send(file);
   });
 }
@@ -70,11 +73,12 @@ export async function fetchSamples(): Promise<SamplesResponse> {
   const res = await fetch("/api/samples");
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Failed to fetch samples");
+  if (!Array.isArray(data.samples)) throw new Error("Invalid response format");
   return data;
 }
 
 export async function deleteSample(sampleId: string): Promise<{ sampleCount: number }> {
-  const res = await fetch(`/api/samples/${sampleId}`, { method: "DELETE" });
+  const res = await fetch(`/api/samples/${encodeURIComponent(sampleId)}`, { method: "DELETE" });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Failed to delete sample");
   return data;
@@ -85,6 +89,9 @@ export async function submitQpadm(body: {
   sources: string[];
   references: string[];
   target: string;
+  userTarget?: boolean;
+  allsnps?: boolean;
+  individualSamples?: Record<string, string[]>;
 }): Promise<{ runId: string }> {
   const res = await fetch("/api/samples/qpadm", {
     method: "POST",
@@ -96,27 +103,36 @@ export async function submitQpadm(body: {
   return { runId: data.runId };
 }
 
+export interface PollResult {
+  status: string;
+  result?: string;
+  error?: string;
+  stage?: string;
+  durationMs?: number;
+}
+
 export async function pollQpadmResult(
   runId: string,
   signal?: AbortSignal,
-): Promise<{ status: string; result?: string }> {
+): Promise<PollResult> {
   const res = await fetch(`/api/samples/qpadm/${runId}`, { signal });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Failed to poll result");
   return data;
 }
 
-const POLL_INTERVAL = 10_000;
+const POLL_INTERVAL = 5_000;
 const POLL_TIMEOUT = 600_000;
 
-export async function runQpadm(
-  body: { dataset: string; sources: string[]; references: string[]; target: string },
+export async function pollUntilDone(
+  runId: string,
+  startedAt: number,
   signal?: AbortSignal,
-): Promise<{ result: string; runId: string }> {
-  const { runId } = await submitQpadm(body);
+  onStageChange?: (stage: string, durationMs?: number) => void,
+): Promise<string> {
+  let lastStage = "";
 
-  const start = Date.now();
-  while (Date.now() - start < POLL_TIMEOUT) {
+  while (Date.now() - startedAt < POLL_TIMEOUT) {
     if (signal?.aborted) throw new Error("Run terminated");
 
     await new Promise((r) => setTimeout(r, POLL_INTERVAL));
@@ -124,17 +140,76 @@ export async function runQpadm(
     if (signal?.aborted) throw new Error("Run terminated");
 
     const poll = await pollQpadmResult(runId, signal);
-    if (poll.status === "completed" && poll.result) {
-      return { result: poll.result, runId };
+
+    if (poll.stage && poll.stage !== lastStage) {
+      lastStage = poll.stage;
+      onStageChange?.(poll.stage, poll.durationMs);
     }
+
+    if (poll.status === "completed" && poll.result) {
+      onStageChange?.("complete", poll.durationMs);
+      return poll.result;
+    }
+    if (poll.status === "failed") throw new Error(poll.error || "Run failed");
   }
 
   throw new Error("qpAdm run timed out. Check History for results.");
 }
 
+export async function runQpadm(
+  body: { dataset: string; sources: string[]; references: string[]; target: string; userTarget?: boolean },
+  signal?: AbortSignal,
+): Promise<{ result: string; runId: string }> {
+  const { runId } = await submitQpadm(body);
+  const result = await pollUntilDone(runId, Date.now(), signal);
+  return { result, runId };
+}
+
+export interface ActiveRun {
+  runId: string;
+  createdAt: number;
+  dataset: string;
+  sources: string[];
+  references: string[];
+  target: string;
+  userTarget?: boolean;
+  stage?: string;
+}
+
+export async function cancelRun(runId: string): Promise<void> {
+  const res = await fetch("/api/samples/qpadm/cancel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ runId }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to cancel run");
+  }
+}
+
+export async function fetchActiveRuns(): Promise<ActiveRun[]> {
+  try {
+    const res = await fetch("/api/samples/qpadm/active");
+    const data = await res.json();
+    return data.runs || [];
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchDatasetLabels(dataset: string): Promise<string[]> {
-  const res = await fetch(`/api/samples/labels?dataset=${dataset}`);
+  const res = await fetch(`/api/samples/labels?dataset=${encodeURIComponent(dataset)}`);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Failed to fetch labels");
+  if (!Array.isArray(data.labels)) throw new Error("Invalid response format");
   return data.labels;
+}
+
+export async function fetchLabelSamples(dataset: string, label: string): Promise<string[]> {
+  const res = await fetch(`/api/samples/labels/samples?dataset=${encodeURIComponent(dataset)}&label=${encodeURIComponent(label)}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to fetch samples");
+  if (!Array.isArray(data.samples)) throw new Error("Invalid response format");
+  return data.samples;
 }

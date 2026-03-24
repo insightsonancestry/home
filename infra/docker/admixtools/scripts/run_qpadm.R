@@ -21,7 +21,7 @@ cat("Target:", target, "\n")
 cat("Left:", paste(left, collapse=", "), "\n")
 cat("Right:", paste(right, collapse=", "), "\n")
 
-result <- qpadm(prefix, left, right, target, return_f4 = TRUE)
+result <- qpadm(prefix, left, right, target, return_f4 = TRUE, allsnps = TRUE)
 
 # Build output
 output <- character()

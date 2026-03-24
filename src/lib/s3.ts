@@ -30,11 +30,18 @@ function validateS3KeyParts(userId: string, fileName: string): void {
   }
 }
 
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50 MB
+
 export async function createPresignedUploadUrl(
   userId: string,
   fileName: string,
+  fileSize?: number,
 ): Promise<{ url: string; s3Key: string }> {
   validateS3KeyParts(userId, fileName);
+
+  if (fileSize !== undefined && fileSize > MAX_UPLOAD_BYTES) {
+    throw new Error(`File too large. Maximum size is ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB.`);
+  }
 
   const s3Key = `${userId}/rawfiles/${fileName}`;
 
@@ -42,9 +49,15 @@ export async function createPresignedUploadUrl(
     Bucket: bucket,
     Key: s3Key,
     ContentType: "text/plain",
+    // ContentLength is signed into the URL — S3 will reject uploads that don't match
+    ...(fileSize !== undefined && { ContentLength: fileSize }),
   });
 
-  const url = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+  const url = await getSignedUrl(s3Client, command, {
+    expiresIn: 900,
+    // Sign ContentLength header so S3 enforces the exact size
+    ...(fileSize !== undefined && { signableHeaders: new Set(["content-length"]) }),
+  });
 
   return { url, s3Key };
 }

@@ -43,21 +43,28 @@ export async function POST(req: NextRequest) {
     await updateSampleStatus(auth.userId, body.sampleId, "processing");
   }
 
-  // Trigger conversion Lambda asynchronously
-  // If invocation itself fails, revert status to "error" so user isn't stuck
-  lambda.send(new InvokeCommand({
-    FunctionName: PROCESSING_FN,
-    InvocationType: "Event",
-    Payload: JSON.stringify({
-      userId: auth.userId,
-      sampleId: body.sampleId,
-      provider: sample.provider,
-      action: sample.provider === "23andme" ? "plink" : "convert",
-    }),
-  })).catch(async (err) => {
-    console.error("Failed to trigger processing Lambda:", err);
-    await updateSampleStatus(auth.userId, body.sampleId, "error").catch(() => {});
-  });
+  // 23andMe files need no conversion — mark as ready directly
+  if (sample.provider === "23andme") {
+    await updateSampleStatus(auth.userId, body.sampleId, "ready", sample.fileSize);
+  } else {
+    // Trigger conversion Lambda for non-23andMe providers
+    try {
+      await lambda.send(new InvokeCommand({
+        FunctionName: PROCESSING_FN,
+        InvocationType: "Event",
+        Payload: JSON.stringify({
+          userId: auth.userId,
+          sampleId: body.sampleId,
+          provider: sample.provider,
+          action: "convert",
+        }),
+      }));
+    } catch (err) {
+      console.error("Failed to trigger processing Lambda:", err);
+      await updateSampleStatus(auth.userId, body.sampleId, "error").catch(() => {});
+      return NextResponse.json({ error: "Failed to start processing" }, { status: 500 });
+    }
+  }
 
   return NextResponse.json({
     sample: {

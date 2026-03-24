@@ -2,15 +2,16 @@ import { NextResponse } from "next/server";
 import { serverSignIn } from "@/lib/cognito-server";
 import { setAuthCookies } from "@/lib/cookies";
 import { validateEmail, sanitizeAuthError } from "@/lib/validation";
+import { safeJson } from "@/lib/auth-verify";
 import { decodeJwt } from "jose";
 import { createRateLimiter, getIpFromRequest } from "@/lib/rate-limit";
 
 // 5 login attempts per minute per IP
-const loginLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
+const loginLimiter = createRateLimiter({ name: "login", windowMs: 60_000, max: 5 });
 
 export async function POST(request: Request) {
   const ip = getIpFromRequest(request);
-  const { allowed, retryAfterMs } = loginLimiter.check(ip);
+  const { allowed, retryAfterMs } = await loginLimiter.check(ip);
   if (!allowed) {
     return NextResponse.json(
       { error: "Too many login attempts. Try again later." },
@@ -19,7 +20,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { email, password } = await request.json();
+    const body = await safeJson<{ email: string; password: string }>(request);
+    if (!body) return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    const { email, password } = body;
 
     const emailErr = validateEmail(email);
     if (emailErr) return NextResponse.json({ error: emailErr }, { status: 400 });

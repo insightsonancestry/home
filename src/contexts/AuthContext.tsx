@@ -40,15 +40,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = "/";
   }, [clearTimers]);
 
+  const refreshTokens = useCallback(async (): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/auth/refresh", { method: "POST" });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }, []);
+
   const fetchSession = useCallback(async (): Promise<AuthUser | null> => {
     try {
-      const res = await fetch("/api/auth/session");
+      const res = await fetch("/api/auth/session", {
+        signal: AbortSignal.timeout(10_000),
+      });
       const data = await res.json();
-      return data.user || null;
+      if (data.user) return data.user;
+
+      // Session expired — try refreshing tokens
+      const refreshed = await refreshTokens();
+      if (!refreshed) return null;
+
+      // Retry session after refresh
+      const retryRes = await fetch("/api/auth/session", {
+        signal: AbortSignal.timeout(10_000),
+      });
+      const retryData = await retryRes.json();
+      return retryData.user || null;
     } catch {
       return null;
     }
-  }, []);
+  }, [refreshTokens]);
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimer.current) clearTimeout(idleTimer.current);
@@ -98,8 +120,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
+    if (!res.ok) {
+      const text = await res.text();
+      let msg = "Login failed";
+      try { msg = JSON.parse(text).error || msg; } catch {}
+      throw new Error(msg);
+    }
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Login failed");
     setUser(data.user);
   }, []);
 

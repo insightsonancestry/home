@@ -27,13 +27,13 @@ export const AADR_DATASETS = [
 ];
 
 export const PIE_COLORS = [
-  "var(--accent)", "var(--accent2)", "#a78bfa", "#f472b6",
-  "#fb923c", "#facc15", "#34d399", "#f87171",
+  "#53bde3", "#f472b6", "#facc15", "#34d399", "#a78bfa",
+  "#fb923c", "#f87171", "#2dd4bf", "#a3e635", "#818cf8",
 ];
 
 export const PIE_COLORS_HEX = [
-  "#53bde3", "#70eded", "#a78bfa", "#f472b6",
-  "#fb923c", "#facc15", "#34d399", "#f87171",
+  "#53bde3", "#f472b6", "#facc15", "#34d399", "#a78bfa",
+  "#fb923c", "#f87171", "#2dd4bf", "#a3e635", "#818cf8",
 ];
 
 export const NAV_ITEMS = [

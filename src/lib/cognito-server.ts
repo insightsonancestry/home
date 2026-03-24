@@ -73,6 +73,18 @@ export async function serverSignIn(email: string, password: string) {
   return result.AuthenticationResult!;
 }
 
+export async function serverRefreshTokens(refreshToken: string, username: string) {
+  const result = await client.send(new InitiateAuthCommand({
+    ClientId: process.env.COGNITO_CLIENT_ID!,
+    AuthFlow: "REFRESH_TOKEN_AUTH",
+    AuthParameters: {
+      REFRESH_TOKEN: refreshToken,
+      SECRET_HASH: secretHash(username),
+    },
+  }));
+  return result.AuthenticationResult!;
+}
+
 export async function serverSignOut(accessToken: string) {
   await client.send(new GlobalSignOutCommand({ AccessToken: accessToken }));
 }

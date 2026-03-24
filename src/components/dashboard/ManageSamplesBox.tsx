@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlowCard } from "@/components/GlowCard";
@@ -22,9 +22,17 @@ function DeleteConfirmModal({ sample, onConfirm, onCancel }: {
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onCancel]);
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      className="fixed inset-0 z-[70] flex items-center justify-center px-4"
+      role="dialog"
+      aria-modal="true"
       onClick={onCancel}
     >
       <motion.div
@@ -103,10 +111,10 @@ function SampleRow({ sample, onDelete }: { sample: Sample; onDelete: (id: string
           }}
         />
         <div className="min-w-0">
-          <p className="text-xs font-semibold truncate" style={{ color: "var(--text-bright)" }}>
+          <p className="text-xs font-semibold truncate" title={sample.label} style={{ color: "var(--text-bright)" }}>
             {sample.label}
           </p>
-          <p className="text-[10px] mt-0.5 truncate" style={{ color: "var(--text-faint)" }}>
+          <p className="text-[10px] mt-0.5 truncate" title={`${sample.id} · ${provider?.label || sample.provider}${fileSizeLabel ? ` · ${fileSizeLabel}` : ""}`} style={{ color: "var(--text-faint)" }}>
             {sample.id} · {provider?.label || sample.provider}
             {fileSizeLabel && ` · ${fileSizeLabel}`}
           </p>
@@ -118,8 +126,8 @@ function SampleRow({ sample, onDelete }: { sample: Sample; onDelete: (id: string
         disabled={deleting}
         className="shrink-0 p-1.5 rounded-sm border transition-all duration-200"
         style={{
-          borderColor: deleting ? "var(--border)" : hovered ? "var(--error-border)" : "var(--border)",
-          color: deleting ? "var(--text-faint)" : hovered ? "var(--error-text)" : "var(--text-faint)",
+          borderColor: deleting ? "var(--border)" : hovered ? "var(--error-border)" : "var(--border-strong)",
+          color: deleting ? "var(--text-faint)" : hovered ? "var(--error-text)" : "var(--text-muted)",
           background: hovered && !deleting ? "var(--error-subtle)" : "transparent",
           cursor: deleting ? "not-allowed" : "pointer",
           opacity: deleting ? 0.5 : 1,
@@ -191,6 +199,7 @@ export function ManageSamplesBox({ samples, loading, onUploadComplete, onDelete 
         label: sampleLabel.trim(),
         provider: selectedProvider,
         fileName: selectedFile.name,
+        fileSize: selectedFile.size,
       });
 
       await uploadToS3(uploadUrl, selectedFile, setUploadProgress);
@@ -257,7 +266,6 @@ export function ManageSamplesBox({ samples, loading, onUploadComplete, onDelete 
                 {samples.map((sample) => (
                   <motion.div
                     key={sample.id}
-                    layout
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}

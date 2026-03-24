@@ -7,12 +7,15 @@ import { useClickOutside } from "@/hooks/useClickOutside";
 
 const MAX_VISIBLE = 200;
 
-export function SearchableSelect({ label, options, selected, onChange, multi = true }: {
+export function SearchableSelect({ label, options, selected, onChange, multi = true, onLabelClick, renderPill, onRemove }: {
   label: string;
   options: string[];
   selected: string[];
   onChange: (v: string[]) => void;
   multi?: boolean;
+  onLabelClick?: (label: string) => void;
+  renderPill?: (label: string) => string;
+  onRemove?: (label: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -48,13 +51,22 @@ export function SearchableSelect({ label, options, selected, onChange, multi = t
   }, [debouncedQuery, optionsLower, selectedSet]);
 
   const handleSelect = (item: string) => {
+    if (onLabelClick) {
+      onLabelClick(item);
+      setQuery("");
+      setHoveredIdx(-1);
+      requestAnimationFrame(() => inputRef.current?.focus());
+      return;
+    }
     onChange(multi ? [...selected, item] : [item]);
     setQuery("");
     setHoveredIdx(-1);
     if (!multi) setOpen(false);
+    if (multi) requestAnimationFrame(() => inputRef.current?.focus());
   };
 
   const handleRemove = (item: string) => {
+    onRemove?.(item);
     onChange(selected.filter((s) => s !== item));
   };
 
@@ -124,7 +136,7 @@ export function SearchableSelect({ label, options, selected, onChange, multi = t
                 background: "var(--accent-subtle)",
               }}
             >
-              {s}
+              {renderPill ? renderPill(s) : s}
               <button
                 onClick={(e) => { e.stopPropagation(); handleRemove(s); }}
                 className="ml-0.5 hover:opacity-70 transition-opacity"
@@ -159,7 +171,7 @@ export function SearchableSelect({ label, options, selected, onChange, multi = t
         </div>
 
         <AnimatePresence>
-          {open && filtered.length > 0 && (
+          {open && (filtered.length > 0 || debouncedQuery) && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -173,7 +185,7 @@ export function SearchableSelect({ label, options, selected, onChange, multi = t
               }}
               role="listbox"
             >
-              {filtered.map((item, i) => (
+              {filtered.length > 0 ? filtered.map((item, i) => (
                 <button
                   key={item}
                   onClick={() => handleSelect(item)}
@@ -189,7 +201,9 @@ export function SearchableSelect({ label, options, selected, onChange, multi = t
                 >
                   {item}
                 </button>
-              ))}
+              )) : (
+                <p className="px-3 py-2 text-xs" style={{ color: "var(--text-faint)" }}>No results found</p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

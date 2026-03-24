@@ -13,6 +13,7 @@ import { fetchSamples, deleteSample } from "@/lib/samples";
 import { SamplesSection } from "@/components/dashboard/SamplesSection";
 import { DIYModelingSection } from "@/components/dashboard/DIYModelingSection";
 import { ComingSoonSection } from "@/components/dashboard/ComingSoonSection";
+import { DashboardErrorBoundary } from "@/components/dashboard/ErrorBoundary";
 
 const NAV_ICONS: Record<string, React.ComponentType> = {
   samples: IconSamples,
@@ -35,6 +36,17 @@ export default function DashboardPage() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useClickOutside<HTMLDivElement>(useCallback(() => setDropdownOpen(false), []));
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (dropdownOpen) setDropdownOpen(false);
+        if (mobileMenuOpen) setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [dropdownOpen, mobileMenuOpen]);
 
   const [samples, setSamples] = useState<Sample[]>([]);
   const [samplesLoading, setSamplesLoading] = useState(true);
@@ -82,13 +94,13 @@ export default function DashboardPage() {
 
       {/* Top Navbar */}
       <header
-        className="relative z-40 flex items-center justify-between px-4 sm:px-6 h-14 shrink-0 border-b-2"
+        className="relative z-30 flex items-center justify-between px-4 sm:px-6 h-14 shrink-0 border-b-2"
         style={{ borderColor: "var(--border-strong)", background: "var(--overlay-bg)" }}
       >
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileMenuOpen((v) => !v)}
-            className="sm:hidden relative w-6 h-6 p-1 -ml-1 z-[60]"
+            className="sm:hidden relative w-6 h-6 p-1 -ml-1 z-50"
             aria-label="Toggle menu"
           >
             <motion.span
@@ -149,7 +161,7 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.97 }}
                 transition={{ duration: 0.18, ease: "easeOut" }}
-                className="absolute right-0 sm:-right-6 top-[calc(50%+1.75rem)] w-48 panel-strong z-50 rounded-t-sm border-t"
+                className="absolute right-0 sm:-right-6 top-[calc(50%+1.75rem)] w-48 panel-strong z-[60] rounded-t-sm border-t"
               >
                 <div className="py-1">
                   {[
@@ -168,7 +180,10 @@ export default function DashboardPage() {
                   ))}
                   <div className="my-1 border-t" style={{ borderColor: "var(--border)" }} />
                   <button
-                    onClick={() => { signOut(); router.push("/signup"); }}
+                    onClick={() => {
+                      if (!window.confirm("Are you sure you want to log out?")) return;
+                      signOut();
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-xs uppercase tracking-[2px] text-left transition-colors duration-150 hover:bg-[var(--muted-hover)]"
                     style={{ color: "var(--error-text)" }}
                   >
@@ -234,9 +249,15 @@ export default function DashboardPage() {
         </aside>
 
         <main className="flex-1 overflow-auto p-3 sm:p-6 lg:p-8 relative grid-bg">
-          {activeSection === "samples" && <SamplesSection samples={samples} loading={samplesLoading} error={samplesError} onReload={loadSamples} onDelete={handleDeleteSample} />}
-          {activeSection === "diy" && <DIYModelingSection sampleLabels={samples.filter((s) => s.status === "ready").map((s) => s.label)} />}
-          {(activeSection === "assisted" || activeSection === "learning" || activeSection === "history") && SECTIONS[activeSection]}
+          <DashboardErrorBoundary>
+            <div style={{ display: activeSection === "samples" ? undefined : "none" }}>
+              <SamplesSection samples={samples} loading={samplesLoading} error={samplesError} onReload={loadSamples} onDelete={handleDeleteSample} />
+            </div>
+            <div style={{ display: activeSection === "diy" ? undefined : "none" }}>
+              <DIYModelingSection sampleLabels={samples.filter((s) => s.status === "ready").map((s) => s.label)} />
+            </div>
+            {(activeSection === "assisted" || activeSection === "learning" || activeSection === "history") && SECTIONS[activeSection]}
+          </DashboardErrorBoundary>
         </main>
       </div>
     </div>

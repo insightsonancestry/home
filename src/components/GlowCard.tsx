@@ -1,4 +1,5 @@
 "use client";
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import { useMouseGlow } from "@/hooks/useMouseGlow";
 
@@ -12,6 +13,7 @@ interface GlowCardProps {
 export function GlowCard({ children, delay = 0, animate = true, className = "" }: GlowCardProps) {
   const { ref, maskImage } = useMouseGlow(180);
   const { ref: glowRef, maskImage: glowMask } = useMouseGlow(250);
+  const hasAnimated = useRef(false);
 
   const content = (
     <div className={`relative h-full group ${className}`}>
@@ -50,11 +52,14 @@ export function GlowCard({ children, delay = 0, animate = true, className = "" }
 
   if (!animate) return content;
 
+  const isFirst = !hasAnimated.current;
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={isFirst ? { opacity: 0, y: 20 } : false}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay, ease: "easeOut" }}
+      transition={{ duration: 0.4, delay, ease: "easeOut" }}
+      onAnimationComplete={() => { hasAnimated.current = true; }}
       className="h-full"
     >
       {content}

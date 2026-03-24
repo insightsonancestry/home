@@ -5,6 +5,7 @@ import { Construct } from "constructs";
 export class DatabaseStack extends cdk.Stack {
   public readonly usersTable: dynamodb.Table;
   public readonly samplesTable: dynamodb.Table;
+  public readonly rateLimitTable: dynamodb.Table;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -29,7 +30,16 @@ export class DatabaseStack extends cdk.Stack {
       sortKey: { name: "sampleId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       pointInTimeRecovery: true,
+      timeToLiveAttribute: "ttl",
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    this.rateLimitTable = new dynamodb.Table(this, "IoaRateLimitTable", {
+      tableName: "ioa-rate-limits",
+      partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      timeToLiveAttribute: "ttl",
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
   }
 }

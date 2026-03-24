@@ -1,24 +1,15 @@
-/**
- * In-memory sliding window rate limiter.
- *
- * LIMITATION: State is per-process. In multi-instance deployments (Vercel, ECS),
- * each instance tracks independently. An attacker hitting N instances gets N× the
- * limit. For production at scale, replace with Redis or DynamoDB-backed counters.
- * Acceptable for single-instance / low-traffic deployments.
- *
- * Usage:
- *   const limiter = createRateLimiter({ windowMs: 60_000, max: 5 });
- *   const { allowed, remaining, retryAfterMs } = limiter.check(key);
- */
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, UpdateCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 
-interface RateLimitEntry {
-  timestamps: number[];
-}
+const client = DynamoDBDocumentClient.from(
+  new DynamoDBClient({ region: process.env.AWS_REGION || "us-east-1" }),
+);
+
+const TABLE = process.env.RATE_LIMIT_TABLE || "ioa-rate-limits";
 
 interface RateLimiterConfig {
-  /** Time window in milliseconds */
+  name: string;
   windowMs: number;
-  /** Max requests per window */
   max: number;
 }
 
@@ -29,73 +20,64 @@ interface RateLimitResult {
 }
 
 interface RateLimiter {
-  check: (key: string) => RateLimitResult;
-  reset: (key: string) => void;
-}
-
-const store = new Map<string, Map<string, RateLimitEntry>>();
-let cleanupTimer: ReturnType<typeof setInterval> | null = null;
-
-function ensureCleanup() {
-  if (cleanupTimer) return;
-  cleanupTimer = setInterval(() => {
-    const now = Date.now();
-    store.forEach((limiterStore) => {
-      const keys: string[] = [];
-      limiterStore.forEach((_, k) => keys.push(k));
-      keys.forEach((key) => {
-        const entry = limiterStore.get(key);
-        if (!entry) return;
-        entry.timestamps = entry.timestamps.filter((t) => now - t < 600_000);
-        if (entry.timestamps.length === 0) limiterStore.delete(key);
-      });
-    });
-  }, 60_000);
-  if (typeof cleanupTimer === "object" && "unref" in cleanupTimer) {
-    cleanupTimer.unref();
-  }
+  check: (key: string) => Promise<RateLimitResult>;
+  reset: (key: string) => Promise<void>;
 }
 
 export function createRateLimiter(config: RateLimiterConfig): RateLimiter {
-  const id = `${config.windowMs}:${config.max}:${Math.random()}`;
-  const limiterStore = new Map<string, RateLimitEntry>();
-  store.set(id, limiterStore);
-  ensureCleanup();
-
   return {
-    check(key: string): RateLimitResult {
+    async check(key: string): Promise<RateLimitResult> {
       const now = Date.now();
-      const entry = limiterStore.get(key) || { timestamps: [] };
+      const windowBucket = Math.floor(now / config.windowMs);
+      const pk = `${config.name}#${key}#${windowBucket}`;
+      const ttl = Math.floor(now / 1000) + Math.ceil(config.windowMs / 1000) + 60;
 
-      // Remove timestamps outside window
-      entry.timestamps = entry.timestamps.filter((t) => now - t < config.windowMs);
+      try {
+        const result = await client.send(new UpdateCommand({
+          TableName: TABLE,
+          Key: { pk },
+          UpdateExpression: "ADD #count :inc SET #ttl = :ttl",
+          ConditionExpression: "attribute_not_exists(#count) OR #count < :max",
+          ExpressionAttributeNames: { "#count": "count", "#ttl": "ttl" },
+          ExpressionAttributeValues: { ":inc": 1, ":ttl": ttl, ":max": config.max },
+          ReturnValues: "ALL_NEW",
+        }));
 
-      if (entry.timestamps.length >= config.max) {
-        const oldest = entry.timestamps[0];
-        const retryAfterMs = config.windowMs - (now - oldest);
-        return { allowed: false, remaining: 0, retryAfterMs };
+        const count = result.Attributes?.count as number;
+        return {
+          allowed: true,
+          remaining: config.max - count,
+          retryAfterMs: 0,
+        };
+      } catch (err: unknown) {
+        if ((err as { name?: string }).name === "ConditionalCheckFailedException") {
+          const windowStartMs = windowBucket * config.windowMs;
+          const windowEndMs = windowStartMs + config.windowMs;
+          const retryAfterMs = Math.max(0, windowEndMs - now);
+          return { allowed: false, remaining: 0, retryAfterMs };
+        }
+        console.error("Rate limit check failed, blocking request:", err);
+        return { allowed: false, remaining: 0, retryAfterMs: 5000 };
       }
-
-      entry.timestamps.push(now);
-      limiterStore.set(key, entry);
-
-      return {
-        allowed: true,
-        remaining: config.max - entry.timestamps.length,
-        retryAfterMs: 0,
-      };
     },
 
-    reset(key: string) {
-      limiterStore.delete(key);
+    async reset(key: string): Promise<void> {
+      const now = Date.now();
+      const windowBucket = Math.floor(now / config.windowMs);
+      const pk = `${config.name}#${key}#${windowBucket}`;
+
+      try {
+        await client.send(new DeleteCommand({
+          TableName: TABLE,
+          Key: { pk },
+        }));
+      } catch (err) {
+        console.error("Rate limit reset failed:", err);
+      }
     },
   };
 }
 
-/**
- * Extract a rate limit key from a request.
- * Uses X-Forwarded-For (behind proxy) or falls back to a generic key.
- */
 export function getIpFromRequest(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();

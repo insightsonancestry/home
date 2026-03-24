@@ -5,14 +5,15 @@ import { createPresignedUploadUrl } from "@/lib/s3";
 import { sanitizeFileName, sanitizeLabel, isValidProvider } from "@/lib/sanitize";
 import { MAX_SAMPLES } from "@/constants/dashboard";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { getReferenceLabels } from "@/lib/ref-labels";
 
-const uploadLimiter = createRateLimiter({ windowMs: 60_000, max: 6 });
+const uploadLimiter = createRateLimiter({ name: "upload", windowMs: 60_000, max: 6 });
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth();
   if (auth.error) return auth.error;
 
-  const { allowed, retryAfterMs } = uploadLimiter.check(auth.userId);
+  const { allowed, retryAfterMs } = await uploadLimiter.check(auth.userId);
   if (!allowed) {
     return NextResponse.json(
       { error: "Too many upload requests. Try again later." },
@@ -20,9 +21,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const body = await safeJson<{ label: string; provider: string; fileName: string }>(req);
+  const body = await safeJson<{ label: string; provider: string; fileName: string; fileSize?: number }>(req);
   if (!body) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+  if (body.fileSize !== undefined) {
+    if (typeof body.fileSize !== "number" || body.fileSize <= 0 || body.fileSize > MAX_FILE_SIZE_BYTES) {
+      return NextResponse.json({ error: "Invalid file size" }, { status: 400 });
+    }
   }
 
   const samples = await getSamples(auth.userId);
@@ -33,6 +41,19 @@ export async function POST(req: NextRequest) {
   const label = sanitizeLabel(body.label);
   if (!label) {
     return NextResponse.json({ error: "Invalid label" }, { status: 400 });
+  }
+
+  // Check label collision with reference dataset populations
+  try {
+    const refLabels = await getReferenceLabels();
+    if (refLabels.has(label)) {
+      return NextResponse.json(
+        { error: "This label matches a population in the reference dataset. Please choose a different label." },
+        { status: 400 },
+      );
+    }
+  } catch {
+    // If we can't load ref labels, allow the upload — don't block on a non-critical check
   }
 
   if (!isValidProvider(body.provider)) {
@@ -72,7 +93,7 @@ export async function POST(req: NextRequest) {
   const og = ogFileName(sampleId);
   const final = finalFileName(sampleId);
 
-  const { url: uploadUrl, s3Key } = await createPresignedUploadUrl(auth.userId, og);
+  const { url: uploadUrl, s3Key } = await createPresignedUploadUrl(auth.userId, og, body.fileSize);
 
   // Update the sample record with actual file names and S3 key
   const { updateSampleFiles } = await import("../store");

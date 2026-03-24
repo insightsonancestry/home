@@ -15,4 +15,4 @@ const env = {
 const database = new DatabaseStack(app, "IoaDatabaseStack", { env });
 new AuthStack(app, "IoaAuthStack", { env, usersTable: database.usersTable });
 const storage = new StorageStack(app, "IoaStorageStack", { env });
-new ProcessingStack(app, "IoaProcessingStack", { env, bucket: storage.referenceDataBucket });
+new ProcessingStack(app, "IoaProcessingStack", { env, bucket: storage.referenceDataBucket, samplesTable: database.samplesTable });

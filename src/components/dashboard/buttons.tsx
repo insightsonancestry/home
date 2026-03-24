@@ -24,11 +24,12 @@ export function PillButton({ active, onClick, children }: { active: boolean; onC
   );
 }
 
-export function ActionButton({ onClick, disabled, children, variant = "accent" }: {
+export function ActionButton({ onClick, disabled, children, variant = "accent", title }: {
   onClick: () => void;
   disabled?: boolean;
   children: React.ReactNode;
   variant?: "accent" | "muted" | "danger";
+  title?: string;
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -60,6 +61,7 @@ export function ActionButton({ onClick, disabled, children, variant = "accent" }
     <button
       onClick={onClick}
       disabled={disabled}
+      title={disabled ? title : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className="w-full py-2.5 text-xs uppercase tracking-[2px] font-semibold border rounded-sm transition-all duration-200"

@@ -15,7 +15,7 @@ export function ComingSoonSection({ title, description, icon }: {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+        transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
         className="flex-1 flex items-center justify-center"
       >
         <div className="relative flex flex-col items-center gap-6 py-16 sm:py-24 w-full max-w-md">
@@ -27,7 +27,7 @@ export function ComingSoonSection({ title, description, icon }: {
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
             className="relative flex items-center justify-center w-20 h-20 rounded-full border"
             style={{
               borderColor: "var(--border-strong)",

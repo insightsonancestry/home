@@ -31,7 +31,7 @@ RUN npm install -g aws-lambda-ric
 # Install R dependencies then ADMIXTOOLS2
 RUN R -e "install.packages('remotes', repos='https://cloud.r-project.org/')"
 RUN R -e "install.packages(c('Rcpp', 'RcppArmadillo', 'igraph', 'dplyr', 'tidyr', 'magrittr', 'rlang', 'tibble', 'purrr'), repos='https://cloud.r-project.org/', Ncpus=4)"
-RUN R -e "remotes::install_github('uqrmaie1/admixtools')"
+RUN R -e "remotes::install_github('uqrmaie1/admixtools@2f6957a36224c15884abf84c543aefddf46352f0')"
 
 # Verify ADMIXTOOLS2 installed
 RUN R -e "library(admixtools); cat('ADMIXTOOLS2 loaded successfully\n')"
@@ -40,13 +40,17 @@ RUN R -e "library(admixtools); cat('ADMIXTOOLS2 loaded successfully\n')"
 COPY plink /opt/bin/plink
 RUN chmod +x /opt/bin/plink
 
-# Copy scripts (convert, extract, qpadm)
-COPY scripts/ /opt/scripts/
-
-# Set up Lambda handler
+# Set up bootstrap loader (real handler is fetched from S3 at runtime)
 WORKDIR /var/task
-COPY handler.mjs ./
-RUN npm init -y && npm install @aws-sdk/client-s3
+COPY bootstrap.mjs ./
+RUN npm init -y && npm install @aws-sdk/client-s3 @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb
+
+ENV NODE_PATH=/var/task/node_modules
+
+# Run as non-root for defense-in-depth
+RUN useradd -r -s /bin/false appuser \
+    && chown -R appuser:appuser /var/task /tmp
+USER appuser
 
 ENTRYPOINT ["npx", "aws-lambda-ric"]
-CMD ["handler.handler"]
+CMD ["bootstrap.handler"]

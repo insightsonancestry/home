@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import { SectionHeader } from "./SectionHeader";
 import { DownloadButton } from "./buttons";
@@ -16,6 +17,9 @@ interface SamplesSectionProps {
 }
 
 export function SamplesSection({ samples, loading, error, onReload, onDelete }: SamplesSectionProps) {
+  const hasAnimated = useRef(false);
+  const isFirst = !hasAnimated.current;
+
   return (
     <div className="mx-auto flex flex-col gap-4 sm:gap-6 h-full">
       <SectionHeader title="Samples & Labels" description="Upload raw files and manage population labels" />
@@ -33,9 +37,10 @@ export function SamplesSection({ samples, loading, error, onReload, onDelete }: 
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={isFirst ? { opacity: 0, y: 20 } : false}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+        transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
+        onAnimationComplete={() => { hasAnimated.current = true; }}
         className="relative group"
       >
         <div
@@ -61,7 +66,7 @@ export function SamplesSection({ samples, loading, error, onReload, onDelete }: 
           </div>
           <div className="flex flex-wrap gap-2">
             {DATASETS.map((d) => (
-              <DownloadButton key={d.id} onClick={() => console.info(`Download .fam for ${d.id}`)}>
+              <DownloadButton key={d.id} onClick={() => { /* TODO: implement .fam download */ }}>
                 {d.label}
               </DownloadButton>
             ))}

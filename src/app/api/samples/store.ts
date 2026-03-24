@@ -16,7 +16,7 @@ export async function getSamples(userId: string): Promise<Sample[]> {
     ExpressionAttributeValues: { ":uid": userId },
   }));
 
-  return (result.Items || []).map((item) => ({
+  return (result.Items || []).filter((item) => !String(item.sampleId).startsWith("run#")).map((item) => ({
     id: item.sampleId,
     label: item.label,
     provider: item.provider,
